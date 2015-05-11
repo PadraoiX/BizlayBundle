@@ -1,0 +1,20 @@
+{
+  "name": "sansis/bizlay-bundle",
+  "description": "Bundle para criação de uma camada de negócios disponibilizada como serviços (Business/Service Layer)",
+  "license": "Commercial",
+  "type": "symfony-bundle",
+  "authors": [{
+    "name": "Pablo Santiago Sanchez",
+    "email": "phackwer@gmail.com"
+  }],
+  "require": {
+    "jms/di-extra-bundle": "dev-master"
+  },
+  "autoload": {
+    "psr-0": {
+      "SanSIS\\BizlayBundle": ""
+    }
+  },
+  "target-dir": "SanSIS/BizlayBundle",
+  "minimum-stability": "dev"
+}

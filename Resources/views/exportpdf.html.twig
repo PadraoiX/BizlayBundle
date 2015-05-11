@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+    <style type="text/css">
+        #render-pdf {
+           width: 100%;
+        }
+        #render-pdf tr td{
+            padding-left: 15px;
+        }
+
+        #render-pdf tr td:first-child {
+            padding-left: 0px;
+        }
+    </style>
+</head>
+{% block body %}
+    <div>
+        <div style=" text-align: center;">
+            <img src="{{ asset('images/logo-relatorio-pequena-novo.png', absolute=true) }}" alt=""/>
+        </div>
+        <div style="margin: 0 auto;text-align: center;width: 577px;">
+            <p> {{ institutionalSubscription | raw }}</p><br/>
+        </div>
+        <div style="text-align: center;">
+            <strong>{{ institutionalTitle }}</strong>
+        </div>
+    </div>
+    <br/>
+
+    <table id="render-pdf">
+        {% if result %}
+            <tr>
+                {% for colName in colNames %}
+                    <td><b>{{ colName }}</b></td>
+                {% endfor %}
+            </tr>
+            {% for r in result %}
+                <tr>
+                    {% for col in colValues %}
+                        {% set value = r[col] %}
+                        <td>
+                            {% if value.timestamp is defined %}
+                                {{ value|date('m/d/Y') }}
+                            {% else %}
+                                {{ value }}
+                            {% endif %}
+                        </td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        {% else %}
+            <tr>
+                <td>
+                    Nenhum resultado encontrado.
+                </td>
+            </tr>
+        {% endif %}
+    </table>
+{% endblock %}
+</html>
