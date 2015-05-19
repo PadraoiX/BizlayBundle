@@ -68,30 +68,32 @@ abstract class AbstractEntity
         foreach ($methods as $method) {
             if ('set' === substr($method, 0, 3) && $method != "setParent") {
                 $attr = lcfirst(substr($method, 3));
-                $params = $ref->getMethod($method)->getParameters();
-                $strDoc = $ref->getMethod($method)->getDocComment();
-                $strAttr = $ref->getProperty($attr)->getDocComment();
-                $class = '';
+                try {
+                    $params = $ref->getMethod($method)->getParameters();
+                    $strDoc = $ref->getMethod($method)->getDocComment();
+                    $strAttr = $ref->getProperty($attr)->getDocComment();
+                    $class = '';
 
-                if (isset($params[0]) && $params[0]->getClass()) {
-                    if (strstr($strDoc, '@innerEntity')) {
-                        $begin = str_replace("\r", '', substr($strDoc, strpos($strDoc, '@innerEntity ') + 13));
-                        $class = substr($begin, 0, strpos($begin, "\n"));
-                        $method = str_replace('set', 'add', $method);
-                    } else {
-                        $bpos = strpos($strDoc, '@param ') + 7;
-                        $epos = strpos($strDoc, ' $') - $bpos;
-                        $class = substr($strDoc, $bpos, $epos);
-                    }
-                    if ($class != get_class($this->__parent)) {
-                        if (!in_array($class, self::$__processed)) {
-                            self::$__processed[] = $class;
-                            $subObj = new $class();
-                            $subObj->setParent($this);
-                            $this->$method($subObj->buildFullEmptyEntity());
+                    if (isset($params[0]) && $params[0]->getClass()) {
+                        if (strstr($strDoc, '@innerEntity')) {
+                            $begin = str_replace("\r", '', substr($strDoc, strpos($strDoc, '@innerEntity ') + 13));
+                            $class = substr($begin, 0, strpos($begin, "\n"));
+                            $method = str_replace('set', 'add', $method);
+                        } else {
+                            $bpos = strpos($strDoc, '@param ') + 7;
+                            $epos = strpos($strDoc, ' $') - $bpos;
+                            $class = substr($strDoc, $bpos, $epos);
+                        }
+                        if ($class != get_class($this->__parent)) {
+                            if (!in_array($class, self::$__processed)) {
+                                self::$__processed[] = $class;
+                                $subObj = new $class();
+                                $subObj->setParent($this);
+                                $this->$method($subObj->buildFullEmptyEntity());
+                            }
                         }
                     }
-                }
+                } catch (\Exception $e) {}
             }
         }
 
