@@ -31,7 +31,7 @@ abstract class AbstractRepository extends EntityRepository
 
             //Processa os dados que vem do serializeArray da jQuery para uma hash table PHP
             foreach ($methods as $method) {
-                if (strstr($method, 'set')) {
+                if (strstr($method, 'set') && $method != 'setParent') {
                     $params = $ref->getMethod($method)->getParameters();
                     if (!$params[0]->getClass()) {
                         $attrs[] = lcfirst(str_replace('set', '', $method));

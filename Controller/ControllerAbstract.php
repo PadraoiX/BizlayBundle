@@ -269,14 +269,18 @@ abstract class ControllerAbstract extends Controller
 
         //look for the referer route
         $referer = $request->headers->get('referer');
-        echo $referer;
-        $lastPath = substr($referer, strpos($referer, $request->getBaseUrl()));
-        $lastPath = str_replace($request->getBaseUrl(), '', $lastPath);
+        $host = $request->headers->get('host');
+        $lastPath = substr($referer, strpos($referer, $request->headers->get('host')));
+
+        $lastPath = str_replace($host, '', $lastPath);
+        $lastPath = str_replace('/app_dev.php', '', $lastPath);
+        $lastPath = str_replace('/app.php', '', $lastPath);
         $lastPath = explode('?', $lastPath);
         $routePath = $lastPath[0];
 
         $matcher = $this->get('router')->getMatcher();
         $parameters = $matcher->match($routePath);
+
         $route = $parameters['_route'];
 
         $tmp = array();
