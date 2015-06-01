@@ -272,11 +272,18 @@ abstract class ControllerAbstract extends Controller
         $host = $request->headers->get('host');
         $lastPath = substr($referer, strpos($referer, $request->headers->get('host')));
 
+        $lastPath = str_replace($request->getBaseUrl(), '', $lastPath);
         $lastPath = str_replace($host, '', $lastPath);
-        $lastPath = str_replace('/app_dev.php', '', $lastPath);
-        $lastPath = str_replace('/app.php', '', $lastPath);
         $lastPath = explode('?', $lastPath);
         $routePath = $lastPath[0];
+
+        // $lastPath = str_replace($host, '', $lastPath);
+        // $lastPath = str_replace('/app_dev.php', '', $lastPath);
+        // $lastPath = str_replace('/app.php', '', $lastPath);
+        // $lastPath = explode('?', $lastPath);
+        // $routePath = $lastPath[0];
+
+        // die($routePath);
 
         $matcher = $this->get('router')->getMatcher();
         $parameters = $matcher->match($routePath);

@@ -97,7 +97,7 @@ abstract class AbstractEntity
             }
         }
 
-        return $this;
+        return $this->toArray();
     }
 
     /**
