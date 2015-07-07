@@ -3,6 +3,7 @@
 namespace SanSIS\BizlayBundle\Controller;
 
 use \Doctrine\Common\Annotations\AnnotationReader;
+use \FOS\RestBundle\Controller\FOSRestController;
 use \JMS\DiExtraBundle\Annotation as DI;
 use \SanSIS\BizlayBundle\Entity\AbstractEntity;
 use \SanSIS\BizlayBundle\Service\ServiceData;
@@ -13,7 +14,7 @@ use \Symfony\Component\DependencyInjection\ContainerInterface;
 use \Symfony\Component\HttpFoundation\Response;
 use \Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
-abstract class ControllerAbstract extends Controller
+abstract class ControllerAbstract extends FOSRestController
 {
     /**
      * Título dos relatórios

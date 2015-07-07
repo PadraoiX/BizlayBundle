@@ -260,18 +260,19 @@ abstract class AbstractEntity
     {
         if (!$nullable) {
             $method = 'get' . ucfirst($prop);
+            $val = $this->$method();
             switch ($type) {
                 case in_array($type, array('smallint', 'integer', 'bigint')):
-                    is_int($this->$method()) ? true : $this->addError('Tipo', 'O atributo não é um inteiro: ' . get_class($this) . '::' . $prop . ' => ' . $this->$method() . ' ( nullable : ' . (int) $nullable . ')');
+                    is_int($val) ? true : $this->addError('Tipo', 'O atributo não é um inteiro: ' . get_class($this) . '::' . $prop . ' => ' . $val . ' ( nullable : ' . (int) $nullable . ')');
                     break;
                 case in_array($type, array('decimal', 'float')):
-                    is_float($this->$method()) ? true : $this->addError('Tipo', 'O atributo não é um float: ' . get_class($this) . '::' . $prop . ' => ' . $this->$method() . ' ( nullable : ' . (int) $nullable . ')');
+                    is_float($val) ? true : $this->addError('Tipo', 'O atributo não é um float: ' . get_class($this) . '::' . $prop . ' => ' . $val . ' ( nullable : ' . (int) $nullable . ')');
                     break;
                 case in_array($type, array('boolean')):
-                    is_bool($this->$method()) ? true : $this->addError('Tipo', 'O atributo não é um boolean: ' . get_class($this) . '::' . $prop . ' => ' . $this->$method() . ' ( nullable : ' . (int) $nullable . ')');
+                    is_bool($val) ? true : $this->addError('Tipo', 'O atributo não é um boolean: ' . get_class($this) . '::' . $prop . ' => ' . $val . ' ( nullable : ' . (int) $nullable . ')');
                     break;
                 case in_array($type, array('date', 'datetime', 'datetimetx', 'time')):
-                    ($this->$method() instanceof \DateTime) ? true : $this->addError('Tipo', 'O atributo não é um date/datetime/time: ' . get_class($this) . '::' . $prop . ' => ' . $this->$method()->format('Y-m-d H:i:s') . ' ( nullable : ' . (int) $nullable . ')');
+                    ($val instanceof \DateTime) ? true : $this->addError('Tipo', 'O atributo não é um date/datetime/time: ' . get_class($this) . '::' . $prop . ' => ' . $val->format('Y-m-d H:i:s') . ' ( nullable : ' . (int) $nullable . ')');
                     break;
             }
         }
@@ -284,11 +285,12 @@ abstract class AbstractEntity
     {
         $method = 'get' . ucfirst($prop);
         if ($length) {
-            (strlen($this->$method()) > $length) ?
+            $val = $this->$method();
+            (strlen($val) > $length) ?
             $this->addError(
                 'Nulo',
                 'Atributo com comprimento superior ao permitido: ' . $prop .
-                ', comprimento: ' . strlen($this->$method()) .
+                ', comprimento: ' . strlen($val) .
                 ', máximo: ' . $length,
                 'Doctrine',
                 get_class($this),
@@ -305,7 +307,8 @@ abstract class AbstractEntity
     {
         $method = 'get' . ucfirst($prop);
         if (!$nullable) {
-            (is_null($this->$method()) || empty($this->$method())) ?
+            $val = $this->$method();
+            (is_null($val) || empty($val)) ?
             $this->addError(
                 'Nulo ou Vazio',
                 'O atributo na entidade ' . get_class($this) .
