@@ -9,7 +9,7 @@
   }],
   "require": {
     "jms/di-extra-bundle": "1.5.0",
-    "friendsofsymfony/rest-bundle": "~0.12.0",
+    "friendsofsymfony/rest-bundle": "~0.12.0"
   },
   "autoload": {
     "psr-0": {
