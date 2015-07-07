@@ -12,8 +12,6 @@ use \SanSIS\BizlayBundle\Entity\Exception\ValidationException;
 /**
  * Class AbstractEntity
  * @package SanSIS\BizlayBundle\Entity
- * @ORM\Entity(repositoryClass="SanSIS\BizlayBundle\Repository\AbstractRepository")
- * @ORM\HasLifecycleCallbacks()
  */
 abstract class AbstractEntity
 {
