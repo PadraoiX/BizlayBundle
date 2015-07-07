@@ -15,6 +15,7 @@
       "SanSIS\\BizlayBundle": ""
     }
   },
+  "target-dir": "SanSIS/BizlayBundle",
   "minimum-stability": "dev"
 }
 
