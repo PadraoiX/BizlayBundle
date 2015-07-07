@@ -8,7 +8,7 @@
     "email": "phackwer@gmail.com"
   }],
   "require": {
-    "jms/di-extra-bundle": "dev-master"
+    "jms/di-extra-bundle": "1.5.0"
   },
   "autoload": {
     "psr-0": {
