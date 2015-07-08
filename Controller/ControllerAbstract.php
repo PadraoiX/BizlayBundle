@@ -177,32 +177,6 @@ abstract class ControllerAbstract extends FOSRestController
     }
 
     /**
-     * Action default da controller
-     *
-     * @Route("/")
-     * @Template
-     * @return \Symfony\Component\HttpFoundation\Response
-     */
-    public function indexAction()
-    {
-        if (method_exists($this->getService(), 'getFormData')) {
-            $params = array(
-                'formData' => $this->getService()->getFormData(),
-            );
-        } else {
-            $params = array();
-        }
-
-        $params['formTitleAction'] = $this->indexFormAction;
-
-        if ($this->indexView) {
-            return $this->render($this->indexView, $params);
-        } else {
-            return $params;
-        }
-    }
-
-    /**
      * Pega um conjunto de dados e retorna no formato JSON
      * @param mixed $data
      * @return \Symfony\Component\HttpFoundation\Response
