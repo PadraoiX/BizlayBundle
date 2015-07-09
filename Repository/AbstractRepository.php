@@ -38,7 +38,7 @@ abstract class AbstractRepository extends EntityRepository
                 if (isset($annons['Doctrine\ORM\Mapping\Column'])) {
                     $pt = $annons['Doctrine\ORM\Mapping\Column']->type;
                     if ($pt == 'string') {
-                        $query->setDQL($query->getDQL() . $and . 'g.' . $attr . ' like :' . $attr . ' ');
+                        $query->setDQL($query->getDQL() . $and . 'lower(g.' . $attr . ') like lower(:' . $attr . ') ');
                         $query->setParameter($attr, '%' . str_replace(' ', '%', trim($searchData['searchAll'])) . '%');
                         $and = ' or ';
                     }
@@ -57,7 +57,7 @@ abstract class AbstractRepository extends EntityRepository
                     if (isset($annons['Doctrine\ORM\Mapping\Column'])) {
                         $pt = $annons['Doctrine\ORM\Mapping\Column']->type;
                         if ($pt == 'string') {
-                            $query->setDQL($query->getDQL() . $and . 'g.' . $field . ' like :' . $field . ' ');
+                            $query->setDQL($query->getDQL() . $and . 'lower(g.' . $field . ') like lower(:' . $field . ') ');
                             $query->setParameter($field, '%' . str_replace(' ', '%', trim($criteria)) . '%');
                             $and = ' and ';
                         }
