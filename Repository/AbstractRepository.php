@@ -44,7 +44,6 @@ abstract class AbstractRepository extends EntityRepository
                     }
                 }
             }
-            echo $query->getSQL();
         } else
         if ($searchData) {
             $and = ' where ';
