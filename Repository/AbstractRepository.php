@@ -1,7 +1,8 @@
 <?php
-
 namespace SanSIS\BizlayBundle\Repository;
 
+use Doctrine\Common\Annotations\AnnotationReader;
+use Doctrine\Common\Annotations\IndexedReader;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Query;
 use SanSIS\BizlayBundle\Entity\AbstractEntity;
@@ -12,6 +13,7 @@ use SanSIS\BizlayBundle\Entity\AbstractEntity;
  */
 abstract class AbstractRepository extends EntityRepository
 {
+
     /**
      * Retorn a query genérica de pesquisa para primeiro nível de entidade (Grid de Crud)
      */
@@ -22,36 +24,45 @@ abstract class AbstractRepository extends EntityRepository
         $orderby = $searchData['orderby'];
         unset($searchData['orderby']);
 
-        if (isset($searchData['searchAll']) && trim($searchData['searchAll'])) {
-            $entityName = $this->getEntityName();
-            $entity = new $entityName();
-            $ref = new \ReflectionClass($entity);
-            $methods = get_class_methods($entityName);
-            $attrs = array();
+        $reflx = new \ReflectionClass($this->getEntityName());
+        $reader = new IndexedReader(new AnnotationReader());
 
-            //Processa os dados que vem do serializeArray da jQuery para uma hash table PHP
-            foreach ($methods as $method) {
-                if (strstr($method, 'set') && $method != 'setParent') {
-                    $params = $ref->getMethod($method)->getParameters();
-                    if (!$params[0]->getClass()) {
-                        $attrs[] = lcfirst(str_replace('set', '', $method));
+        if (isset($searchData['searchAll']) && trim($searchData['searchAll'])) {
+            $props = $reflx->getProperties();
+
+            $and = ' where ';
+
+            foreach ($props as $prop) {
+                $attr = $prop->getName();
+                $annons = $reader->getPropertyAnnotations($prop);
+                if (isset($annons['Doctrine\ORM\Mapping\Column'])) {
+                    $pt = $annons['Doctrine\ORM\Mapping\Column']->type;
+                    if ($pt == 'string') {
+                        $query->setDQL($query->getDQL() . $and . 'g.' . $attr . ' like :' . $attr . ' ');
+                        $query->setParameter($attr, '%' . str_replace(' ', '%', trim($searchData['searchAll'])) . '%');
+                        $and = ' or ';
                     }
                 }
             }
-
-            $and = ' where ';
-            foreach ($attrs as $attr) {
-                $query->setDQL($query->getDQL() . $and . 'g.' . $attr . ' like :' . $attr . ' ');
-                $query->setParameter($attr, '%' . str_replace(' ', '%', trim($searchData['searchAll'])) . '%');
-                $and = ' or ';
-            }
-        } else if ($searchData) {
+            echo $query->getSQL();
+        } else
+        if ($searchData) {
             $and = ' where ';
             foreach ($searchData as $field => $criteria) {
-                if (trim($searchData[$field]) != "") {
-                    $query->setDQL($query->getDQL() . $and . 'g.' . $field . ' like :' . $field . ' ');
-                    $query->setParameter($field, '%' . str_replace(' ', '%', trim($criteria)) . '%');
-                    $and = ' and ';
+                if (
+                    trim($searchData[$field]) != "" &&
+                    method_exists($this->getEntityName(), 'set' . ucfirst($field))
+                ) {
+                    $prop = $reflx->getProperty($field);
+                    $annons = $reader->getPropertyAnnotations($prop);
+                    if (isset($annons['Doctrine\ORM\Mapping\Column'])) {
+                        $pt = $annons['Doctrine\ORM\Mapping\Column']->type;
+                        if ($pt == 'string') {
+                            $query->setDQL($query->getDQL() . $and . 'g.' . $field . ' like :' . $field . ' ');
+                            $query->setParameter($field, '%' . str_replace(' ', '%', trim($criteria)) . '%');
+                            $and = ' and ';
+                        }
+                    }
                 } else {
                     unset($searchData[$field]);
                 }
