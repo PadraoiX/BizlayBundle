@@ -20,18 +20,18 @@ abstract class AbstractRepository extends EntityRepository
     public function getSearchQuery(&$searchData)
     {
         $query = $this->createQueryBuilder('g')->getQuery();
-
+        
         $orderby = $searchData['orderby'];
         unset($searchData['orderby']);
-
+        
         $reflx = new \ReflectionClass($this->getEntityName());
         $reader = new IndexedReader(new AnnotationReader());
-
+        
         if (isset($searchData['searchAll']) && trim($searchData['searchAll'])) {
             $props = $reflx->getProperties();
-
+            
             $and = ' where ';
-
+            
             foreach ($props as $prop) {
                 $attr = $prop->getName();
                 $annons = $reader->getPropertyAnnotations($prop);
@@ -44,34 +44,31 @@ abstract class AbstractRepository extends EntityRepository
                     }
                 }
             }
-        } else
-        if ($searchData) {
-            $and = ' where ';
-            foreach ($searchData as $field => $criteria) {
-                if (
-                    trim($searchData[$field]) != "" &&
-                    method_exists($this->getEntityName(), 'set' . ucfirst($field))
-                ) {
-                    $prop = $reflx->getProperty($field);
-                    $annons = $reader->getPropertyAnnotations($prop);
-                    if (isset($annons['Doctrine\ORM\Mapping\Column'])) {
-                        $pt = $annons['Doctrine\ORM\Mapping\Column']->type;
-                        if ($pt == 'string') {
-                            $query->setDQL($query->getDQL() . $and . 'lower(g.' . $field . ') like lower(:' . $field . ') ');
-                            $query->setParameter($field, '%' . str_replace(' ', '%', trim($criteria)) . '%');
-                            $and = ' and ';
+        } else 
+            if ($searchData) {
+                $and = ' where ';
+                foreach ($searchData as $field => $criteria) {
+                    if (trim($searchData[$field]) != "" && method_exists($this->getEntityName(), 'set' . ucfirst($field))) {
+                        $prop = $reflx->getProperty($field);
+                        $annons = $reader->getPropertyAnnotations($prop);
+                        if (isset($annons['Doctrine\ORM\Mapping\Column'])) {
+                            $pt = $annons['Doctrine\ORM\Mapping\Column']->type;
+                            if ($pt == 'string') {
+                                $query->setDQL($query->getDQL() . $and . 'lower(g.' . $field . ') like lower(:' . $field . ') ');
+                                $query->setParameter($field, '%' . str_replace(' ', '%', trim($criteria)) . '%');
+                                $and = ' and ';
+                            }
                         }
+                    } else {
+                        unset($searchData[$field]);
                     }
-                } else {
-                    unset($searchData[$field]);
                 }
             }
-        }
-
+        
         if (isset($orderby) && $orderby) {
             $query->setDQL($query->getDQL() . ' order by ' . $orderby);
         }
-
+        
         return $query->setHydrationMode(Query::HYDRATE_ARRAY);
     }
 
