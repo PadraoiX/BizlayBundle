@@ -26,13 +26,10 @@ abstract class AbstractRepository extends EntityRepository
 
         $reflx = new \ReflectionClass($this->getEntityName());
         $reader = new IndexedReader(new AnnotationReader());
+        $and = ' where ';
 
         if (isset($searchData['searchAll']) && trim($searchData['searchAll'])) {
             $props = $reflx->getProperties();
-
-            $and = ' where ';
-
-            $hasStatusTuple = $hasBoolFlag = false;
 
             foreach ($props as $prop) {
                 $attr = $prop->getName();
@@ -47,9 +44,11 @@ abstract class AbstractRepository extends EntityRepository
                 }
             }
 
+            $and = ' and ';
+
         } else
         if ($searchData) {
-            $and = ' where ';
+
             foreach ($searchData as $field => $criteria) {
                 if (trim($searchData[$field]) != "" && method_exists($this->getEntityName(), 'set' . ucfirst($field))) {
                     $prop = $reflx->getProperty($field);
@@ -71,12 +70,12 @@ abstract class AbstractRepository extends EntityRepository
         $boolAttr = $reflx->hasProperty('isActive') ? 'isActive' : ($reflx->hasProperty('flActive') ? 'flActive' : false);
 
         if ($boolAttr) {
-            $query->setDQL($query->getDQL() . ' and g.' . $boolAttr . ' = :boolFlag');
+            $query->setDQL($query->getDQL() . $and . ' g.' . $boolAttr . ' = :boolFlag');
             $query->setParameter('boolFlag', true);
         }
 
         if ($reflx->hasProperty('statusTuple')) {
-            $query->setDQL($query->getDQL() . ' and g.statusTuple <> 0 ');
+            $query->setDQL($query->getDQL() . $and . ' g.statusTuple <> 0 ');
         }
 
         if (isset($orderby) && $orderby) {
