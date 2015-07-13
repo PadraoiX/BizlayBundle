@@ -66,8 +66,9 @@ abstract class AbstractRepository extends EntityRepository
     {
         $query = $this->createQueryBuilder('g')->getQuery();
 
-        $orderby = $searchData['orderby'];
-        unset($searchData['orderby']);
+        $orderBy = $searchData['orderBy'];
+        $sortOrder = $searchData['sortOrder'];
+        unset($searchData['orderBy']);
 
         $reflx = new \ReflectionClass($this->getEntityName());
         $reader = new IndexedReader(new AnnotationReader());
@@ -114,6 +115,11 @@ abstract class AbstractRepository extends EntityRepository
                             $query->setParameter($field, '%' . str_replace(' ', '%', trim($criteria)) . '%');
                             $and = ' and ';
                         }
+                        if ($pt == 'boolean') {
+                            $dql .= $and . 'g.' . $field . ' = :' . $field . ' ';
+                            $query->setParameter($field, trim($criteria));
+                            $and = ' and ';
+                        }
                     }
                     $count = true;
                 } else {
@@ -141,8 +147,8 @@ abstract class AbstractRepository extends EntityRepository
             $query->setDQL($query->getDQL() . $and . ' g.statusTuple <> 0 ');
         }
 
-        if (isset($orderby) && $orderby) {
-            $query->setDQL($query->getDQL() . ' order by ' . $orderby);
+        if (isset($orderBy) && $orderBy) {
+            $query->setDQL($query->getDQL() . ' order by ' . $orderBy . ' ' . ($sortOrder ? $sortOrder : ' asc '));
         }
 
         return $query->setHydrationMode(Query::HYDRATE_ARRAY);
