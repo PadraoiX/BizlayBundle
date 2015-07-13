@@ -71,29 +71,37 @@ abstract class AbstractRepository extends EntityRepository
 
         $reflx = new \ReflectionClass($this->getEntityName());
         $reader = new IndexedReader(new AnnotationReader());
-        $and = ' where ';
+
+        $and = '';
 
         if (isset($searchData['searchAll']) && trim($searchData['searchAll'])) {
             $props = $reflx->getProperties();
 
-            foreach ($props as $prop) {
-                $attr = $prop->getName();
-                $annons = $reader->getPropertyAnnotations($prop);
-                if (isset($annons['Doctrine\ORM\Mapping\Column'])) {
-                    $pt = $annons['Doctrine\ORM\Mapping\Column']->type;
-                    if ($pt == 'string') {
-                        $query->setDQL($query->getDQL() . $and . 'lower(g.' . $attr . ') like lower(:' . $attr . ') ');
-                        $query->setParameter($attr, '%' . str_replace(' ', '%', trim($searchData['searchAll'])) . '%');
-                        $and = ' or ';
+            if (count($props)) {
+                $query->setDQL($query->getDQL().' where ( ');
+                foreach ($props as $prop) {
+                    $attr = $prop->getName();
+                    $annons = $reader->getPropertyAnnotations($prop);
+                    if (isset($annons['Doctrine\ORM\Mapping\Column'])) {
+                        $pt = $annons['Doctrine\ORM\Mapping\Column']->type;
+                        if ($pt == 'string') {
+                            $query->setDQL($query->getDQL() . $and . 'lower(g.' . $attr . ') like lower(:' . $attr . ') ');
+                            $query->setParameter($attr, '%' . str_replace(' ', '%', trim($searchData['searchAll'])) . '%');
+                            $and = ' or ';
+                        }
                     }
                 }
+
+                $query->setDQL($query->getDQL().' ) ');
+
+                $and = ' and ';
+            } else {
+                $and = ' where ';
             }
 
-            $and = ' and ';
-
         } else
-        if ($searchData) {
-
+        if (count($searchData)) {
+            $query->setDQL($query->getDQL().' where ( ');
             foreach ($searchData as $field => $criteria) {
                 if (trim($searchData[$field]) != "" && method_exists($this->getEntityName(), 'set' . ucfirst($field))) {
                     $prop = $reflx->getProperty($field);
@@ -110,6 +118,9 @@ abstract class AbstractRepository extends EntityRepository
                     unset($searchData[$field]);
                 }
             }
+            $query->setDQL($query->getDQL().' ) ');
+        } else {
+            $and = ' where ';
         }
 
         $boolAttr = $reflx->hasProperty('isActive') ? 'isActive' : ($reflx->hasProperty('flActive') ? 'flActive' : false);
