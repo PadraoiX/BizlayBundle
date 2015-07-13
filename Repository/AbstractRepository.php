@@ -78,7 +78,7 @@ abstract class AbstractRepository extends EntityRepository
             $props = $reflx->getProperties();
 
             if (count($props)) {
-                $query->setDQL($query->getDQL().' where ( ');
+                $query->setDQL($query->getDQL() . ' where ( ');
                 foreach ($props as $prop) {
                     $attr = $prop->getName();
                     $annons = $reader->getPropertyAnnotations($prop);
@@ -92,7 +92,7 @@ abstract class AbstractRepository extends EntityRepository
                     }
                 }
 
-                $query->setDQL($query->getDQL().' ) ');
+                $query->setDQL($query->getDQL() . ' ) ');
 
                 $and = ' and ';
             } else {
@@ -101,7 +101,8 @@ abstract class AbstractRepository extends EntityRepository
 
         } else
         if (count($searchData)) {
-            $query->setDQL($query->getDQL().' where ( ');
+            $count = false;
+            $dql = ' where ( ';
             foreach ($searchData as $field => $criteria) {
                 if (trim($searchData[$field]) != "" && method_exists($this->getEntityName(), 'set' . ucfirst($field))) {
                     $prop = $reflx->getProperty($field);
@@ -109,16 +110,22 @@ abstract class AbstractRepository extends EntityRepository
                     if (isset($annons['Doctrine\ORM\Mapping\Column'])) {
                         $pt = $annons['Doctrine\ORM\Mapping\Column']->type;
                         if ($pt == 'string') {
-                            $query->setDQL($query->getDQL() . $and . 'lower(g.' . $field . ') like lower(:' . $field . ') ');
+                            $dql .= $and . 'lower(g.' . $field . ') like lower(:' . $field . ') ';
                             $query->setParameter($field, '%' . str_replace(' ', '%', trim($criteria)) . '%');
                             $and = ' and ';
                         }
                     }
+                    $count = true;
                 } else {
                     unset($searchData[$field]);
                 }
             }
-            $query->setDQL($query->getDQL().' ) ');
+            $dql .= ' ) ';
+            if ($count) {
+                $query->setDQL($query->getDQL() . $dql);
+            } else {
+                $and = ' where ';
+            }
         } else {
             $and = ' where ';
         }
