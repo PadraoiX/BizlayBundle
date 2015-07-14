@@ -124,25 +124,31 @@ abstract class AbstractRepository extends EntityRepository
 
                             $dql .= $and . 'g.' . $field . ' = :' . $field . ' ';
                             //@TODO - Melhorar isto depois, pelamordedeus
+
                             if (strstr($criteria, 'T')) {
                                 $criteria = explode('T', $criteria);
-                                $time = explode('-', $criteria[1]);
+                                if (strstr($criteria[1], '.')) {
+                                    $time = explode('.', $criteria[1]);
+                                } else {
+                                    $time = explode('-', $criteria[1]);
+                                }
                                 $criteria = $criteria[0] . ' ' . $time[0];
                             }
+
                             if (strstr($criteria, '/')) {
                                 if (strstr($criteria, ':')) {
-                                    $criteria = $class::createFromFormat('d/m/Y H:i:s', $criteria);
+                                    $criteria = \Datetime::createFromFormat('d/m/Y H:i:s', $criteria);
                                 } else {
-                                    $criteria = $class::createFromFormat('d/m/Y', $criteria);
+                                    $criteria = \Datetime::createFromFormat('d/m/Y', $criteria);
                                 }
                             } else {
                                 if (strstr($criteria, ':')) {
-                                    $criteria = $class::createFromFormat('Y-m-d H:i:s', $criteria);
+                                    $criteria = \Datetime::createFromFormat('Y-m-d H:i:s', $criteria);
                                 } else {
-                                    $criteria = $class::createFromFormat('Y-m-d', $criteria);
+                                    $criteria = \Datetime::createFromFormat('Y-m-d', $criteria);
                                 }
                             }
-                            $query->setParameter($field, trim($criteria));
+                            $query->setParameter($field, $criteria);
                             $and = ' and ';
                         }
                     }
