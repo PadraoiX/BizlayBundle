@@ -131,7 +131,7 @@ abstract class AbstractEntity
                                 $subvalue->setParent($this);
                                 $subvalues[$key] = $subvalue->toArray();
                             } else if ($value instanceof \DateTime) {
-                                $subvalue = $subvalue->format('Y-m-d h:m:i');
+                                $subvalue = $subvalue;
                             } else if (is_object($subvalue) && $this->__parent != $subvalue) {
                                 $subvalues[$key] = $subvalue->toString();
                             } else if ($this->__parent != $subvalue) {
@@ -144,7 +144,7 @@ abstract class AbstractEntity
                         $value->setParent($this);
                         $value = $value->toArray();
                     } else if ($value instanceof \DateTime) {
-                        $value = $value->format('Y-m-d h:m:i');
+                        $value = $value;
                     } else if (is_object($value) && $this->__parent != $value) {
                         /*@TODO - verificar tipo de objeto*/
                         if (method_exists($value, 'toString')) {
