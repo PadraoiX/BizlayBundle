@@ -7,33 +7,47 @@ use \Doctrine\Common\Annotations\IndexedReader;
 use \Doctrine\Common\Collections\ArrayCollection;
 use \Doctrine\ORM\Mapping as ORM;
 use \Doctrine\ORM\PersistentCollection;
+use \JMS\Serializer\Annotation as Serializer;
 use \SanSIS\BizlayBundle\Entity\Exception\ValidationException;
 
 /**
  * Class AbstractEntity
  * @package SanSIS\BizlayBundle\Entity
+ * @Serializer\ExclusionPolicy("none")
  */
 abstract class AbstractEntity
 {
     /**
      * @var array
+     * @Serializer\Exclude
      */
     protected static $__toArray = array();
+
+    /**
+     * @var array
+     * @Serializer\Exclude
+     */
     protected static $__converted = array();
+
+    /**
+     * @var array
+     * @Serializer\Exclude
+     */
     protected static $__processed = array();
-    // protected static $__cryptDelimiter = '<-==->';
 
     /**
      * Array com erros no processamento da Service
      *
      * @var array
+     * @Serializer\Exclude
      */
     protected static $__errors = array();
 
     /**
      * Objeto que contém a instancia atual
      *
-     * @var array
+     * @var AbstractEntity
+     * @Serializer\Exclude
      */
     protected $__parent = null;
 

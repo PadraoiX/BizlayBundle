@@ -64,11 +64,14 @@ abstract class AbstractRepository extends EntityRepository
      */
     public function getSearchQuery(&$searchData)
     {
-        $query = $this->createQueryBuilder('g')->getQuery();
+        $qb = $this->createQueryBuilder('g');
+        $query = $qb->getQuery();
+        $origDQL = $query->getDQL();
 
         $orderBy = $searchData['orderBy'];
         $sortOrder = $searchData['sortOrder'];
         unset($searchData['orderBy']);
+        unset($searchData['sortOrder']);
 
         $reflx = new \ReflectionClass($this->getEntityName());
         $reader = new IndexedReader(new AnnotationReader());
@@ -86,7 +89,7 @@ abstract class AbstractRepository extends EntityRepository
                     if (isset($annons['Doctrine\ORM\Mapping\Column'])) {
                         $pt = $annons['Doctrine\ORM\Mapping\Column']->type;
                         if ($pt == 'string') {
-                            $query->setDQL($query->getDQL() . $and . 'lower(g.' . $attr . ') like lower(:' . $attr . ') ');
+                            $query->setDQL($query->getDQL() . $and . ' lower(g.' . $attr . ') like lower(:' . $attr . ') ');
                             $query->setParameter($attr, '%' . str_replace(' ', '%', trim($searchData['searchAll'])) . '%');
                             $and = ' or ';
                         }
@@ -117,7 +120,7 @@ abstract class AbstractRepository extends EntityRepository
                         }
                         if ($pt == 'boolean') {
                             $dql .= $and . 'g.' . $field . ' = :' . $field . ' ';
-                            $query->setParameter($field, trim($criteria));
+                            $query->setParameter($field, (bool) trim($criteria));
                             $and = ' and ';
                         }
                         if ($pt == 'date' || $pt == 'datetime' || $pt == 'time') {
@@ -179,7 +182,13 @@ abstract class AbstractRepository extends EntityRepository
         }
 
         if (isset($orderBy) && $orderBy) {
-            $query->setDQL($query->getDQL() . ' order by ' . $orderBy . ' ' . ($sortOrder ? $sortOrder : ' asc '));
+            $sortOrder = ($sortOrder ? $sortOrder : ' asc ');
+            $finalDql = str_replace(
+                $origDQL,
+                $query->getDQL(),
+                $qb->orderBy($orderBy, $sortOrder)->getQuery()->getDQL()
+            );
+            $query->setDQL($finalDql);
         }
 
         return $query->setHydrationMode(Query::HYDRATE_ARRAY);
