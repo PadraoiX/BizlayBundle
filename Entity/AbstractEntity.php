@@ -8,6 +8,7 @@ use \Doctrine\Common\Collections\ArrayCollection;
 use \Doctrine\ORM\Mapping as ORM;
 use \Doctrine\ORM\PersistentCollection;
 use \JMS\Serializer\Annotation as Serializer;
+use \JMS\Serializer\SerializerBuilder;
 use \SanSIS\BizlayBundle\Entity\Exception\ValidationException;
 
 /**
@@ -50,6 +51,12 @@ abstract class AbstractEntity
      * @Serializer\Exclude
      */
     protected $__parent = null;
+
+    /**
+     * [$__serializer description]
+     * @var null
+     */
+    protected static $__serializer = null;
 
     public function setParent($parent)
     {
@@ -112,6 +119,23 @@ abstract class AbstractEntity
         return $this->toArray();
     }
 
+    private function __getSerializer()
+    {
+        if (!self::$__serializer) {
+            self::$__serializer = SerializerBuilder::create()->build();
+        }
+        return self::$__serializer;
+    }
+
+    private function __getEntityAsArray($entity)
+    {
+        // die($this->__getSerializer()->serialize($entity, 'json'));
+        return
+        json_decode(
+            $this->__getSerializer()->serialize($entity, 'json')
+        );
+    }
+
     /**
      * @return array
      */
@@ -133,7 +157,14 @@ abstract class AbstractEntity
                             } else if ($value instanceof \DateTime) {
                                 $subvalue = $subvalue;
                             } else if (is_object($subvalue) && $this->__parent != $subvalue) {
-                                $subvalues[$key] = $subvalue->toString();
+                                /*@TODO - verificar tipo de objeto*/
+                                if (method_exists($subvalue, 'toString')) {
+                                    $subvalue = $subvalue->toString();
+                                } else if (method_exists($subvalue, '__toString')) {
+                                    $subvalue = $subvalue->__toString();
+                                } else {
+                                    $subvalue = $this->__getEntityAsArray($subvalue);
+                                }
                             } else if ($this->__parent != $subvalue) {
                                 $subvalues[$key] = $subvalue;
                             }
@@ -149,10 +180,10 @@ abstract class AbstractEntity
                         /*@TODO - verificar tipo de objeto*/
                         if (method_exists($value, 'toString')) {
                             $value = $value->toString();
-                        }
-
-                        if (method_exists($value, '__toString')) {
+                        } else if (method_exists($value, '__toString')) {
                             $value = $value->__toString();
+                        } else {
+                            $value = $this->__getEntityAsArray($value);
                         }
 
                     }
@@ -230,10 +261,6 @@ abstract class AbstractEntity
                 !strstr($attr, '__') &&
                 $attr != 'lazyPropertiesDefaults' &&
                 $attr != 'id' &&
-                $attr != '__toArray' &&
-                $attr != '__converted' &&
-                $attr != '__errors'
-                &&
                 (
                     is_object($this->__parent) &&
                     $this->$method() !== $this->__parent
