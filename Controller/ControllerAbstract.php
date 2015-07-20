@@ -8,7 +8,6 @@ use \JMS\DiExtraBundle\Annotation as DI;
 use \SanSIS\BizlayBundle\Entity\AbstractEntity;
 use \SanSIS\BizlayBundle\Service\ServiceData;
 use \Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
-use \Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use \Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use \Symfony\Component\DependencyInjection\ContainerInterface;
 use \Symfony\Component\HttpFoundation\Response;
@@ -203,13 +202,16 @@ abstract class ControllerAbstract extends FOSRestController
     protected function getService()
     {
         if ($this->service) {
-            return $this->get($this->service);
+            $serv = $this->get($this->service);
         } else {
             $arr = explode('\\', get_class($this));
             $arr[count($arr) - 1] = (str_replace('Controller', '', $arr[count($arr) - 1])) . '.service';
-
-            return $this->get(strtolower($arr[count($arr) - 1]));
+            $serv = $this->get(strtolower($arr[count($arr) - 1]));
         }
+
+        $serv->setDto($this->getDto());
+
+        return $serv;
     }
 
     /**

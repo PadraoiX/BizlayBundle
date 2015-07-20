@@ -148,6 +148,10 @@ abstract class AbstractEntity
                 if ('get' === substr($method, 0, 3) && $method != "getErrors") {
                     $value = $this->$method();
                     if (\is_array($value) || $value instanceof ArrayCollection || $value instanceof PersistentCollection) {
+
+                        /**
+                         * @TODO - Filtrar innerEntity para não ter referência circular
+                         */
                         $subvalues = array();
                         foreach ($value as $key => $subvalue) {
                             if ($subvalue instanceof AbstractEntity && $this->__parent !== $subvalue) {
@@ -164,7 +168,7 @@ abstract class AbstractEntity
                                 } else {
                                     $subvalue = $this->__getEntityAsArray($subvalue);
                                 }
-                            } else if ($this->__parent != $subvalue) {
+                            } else if ($this->__parent !== $subvalue) {
                                 $subvalues[$key] = $subvalue;
                             }
                         }
