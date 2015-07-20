@@ -129,7 +129,6 @@ abstract class AbstractEntity
 
     private function __getEntityAsArray($entity)
     {
-        // die($this->__getSerializer()->serialize($entity, 'json'));
         return
         json_decode(
             $this->__getSerializer()->serialize($entity, 'json')
@@ -151,12 +150,12 @@ abstract class AbstractEntity
                     if (\is_array($value) || $value instanceof ArrayCollection || $value instanceof PersistentCollection) {
                         $subvalues = array();
                         foreach ($value as $key => $subvalue) {
-                            if ($subvalue instanceof AbstractEntity && $this->__parent != $subvalue) {
+                            if ($subvalue instanceof AbstractEntity && $this->__parent !== $subvalue) {
                                 $subvalue->setParent($this);
                                 $subvalues[$key] = $subvalue->toArray();
                             } else if ($value instanceof \DateTime) {
                                 $subvalue = $subvalue;
-                            } else if (is_object($subvalue) && $this->__parent != $subvalue) {
+                            } else if (is_object($subvalue) && $this->__parent !== $subvalue) {
                                 /*@TODO - verificar tipo de objeto*/
                                 if (method_exists($subvalue, 'toString')) {
                                     $subvalue = $subvalue->toString();
@@ -171,12 +170,12 @@ abstract class AbstractEntity
                         }
                         $value = $subvalues;
                     }
-                    if ($value instanceof AbstractEntity && $this->__parent != $value) {
+                    if ($value instanceof AbstractEntity && $this->__parent !== $value) {
                         $value->setParent($this);
                         $value = $value->toArray();
                     } else if ($value instanceof \DateTime) {
                         $value = $value;
-                    } else if (is_object($value) && $this->__parent != $value) {
+                    } else if (is_object($value) && $this->__parent !== $value) {
                         /*@TODO - verificar tipo de objeto*/
                         if (method_exists($value, 'toString')) {
                             $value = $value->toString();
