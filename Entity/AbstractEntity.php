@@ -106,9 +106,11 @@ abstract class AbstractEntity
                         if ($class != get_class($this->__parent)) {
                             if (!in_array($class, self::$__processed)) {
                                 self::$__processed[] = $class;
-                                $subObj = new $class();
-                                $subObj->setParent($this);
-                                $this->$method($subObj->buildFullEmptyEntity());
+                                if ($subObj instanceof AbstractEntity) {
+                                    $subObj = new $class();
+                                    $subObj->setParent($this);
+                                    $this->$method($subObj->buildFullEmptyEntity());
+                                }
                             }
                         }
                     }

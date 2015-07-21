@@ -170,4 +170,19 @@ abstract class AbstractService
         $this->errors[$i]['source'] = $source;
         $this->errors[$i]['attr'] = $attr;
     }
+
+    /**
+     * Converte Camel Case para snake_case
+     * @param  [type] $input [description]
+     * @return [type]        [description]
+     */
+    public function toSnakeCase($input)
+    {
+        if (preg_match('/[A-Z]/', $input) === 0) {return $input;}
+        $pattern = '/([a-z])([A-Z])/';
+        $r = strtolower(preg_replace_callback($pattern, function ($a) {
+            return $a[1] . "_" . strtolower($a[2]);
+        }, $input));
+        return $r;
+    }
 }
