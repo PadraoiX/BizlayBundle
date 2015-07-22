@@ -125,6 +125,4 @@ provida e convertê-los para array antes de passá-los a outras camadas.
 
 Maiores exemplos podem ser vistos nos Cruds gerados pela DevelBundle.
 
-
-
 @author Pablo Santiago Sánchez - phackwer@gmail.com
