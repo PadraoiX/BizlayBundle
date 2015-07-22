@@ -258,7 +258,7 @@ abstract class AbstractRepository extends EntityRepository
                 }
 
                 if (count($query->getScalarResult())) {
-                    $this->addError('verificação', 'Já existe o valor informado para ' . $prop->getName() . '.', 'Repository', get_class($this), $prop->getName());
+                    $this->addError('verificação', 'Já existe o valor informado para ' . $prop->getName() . '.', 'Repository', get_class($entity), $prop->getName());
                 }
             }
         }
