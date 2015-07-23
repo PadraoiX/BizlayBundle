@@ -73,6 +73,24 @@ abstract class AbstractService
     }
 
     /**
+     * Retorna o endereço da aplicação completo
+     *
+     * @return string
+     */
+    public function getAppUrl()
+    {
+        $req = $this->container->get('request_stack')->getCurrentRequest();
+        return
+            $req->getScheme().
+            '://'.
+            $req->getHost().
+            ':'.
+            $req->getPort().
+            '/'.
+            $req->getBaseUrl();
+    }
+
+    /**
      * Geração de log
      *
      * @param $level (error, info)
