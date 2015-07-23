@@ -68,7 +68,10 @@ abstract class AbstractRepository extends EntityRepository
         $query = $qb->getQuery();
         $origDQL = $query->getDQL();
 
-        $orderBy = ($searchData['orderBy']) ? $searchData['orderBy'] : 'g.id';
+        $getIdent = $metadata->getIdentifier();
+        $identifier = isset($getIdent[0]) ? $getIdent[0] : 'id';
+
+        $orderBy = ($searchData['orderBy']) ? $searchData['orderBy'] : 'g.'.$identifier;
         $sortOrder = ($searchData['sortOrder']) ? $searchData['sortOrder'] : 'desc';
         unset($searchData['orderBy']);
         unset($searchData['sortOrder']);
