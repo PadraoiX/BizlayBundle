@@ -68,6 +68,7 @@ abstract class AbstractRepository extends EntityRepository
         $query = $qb->getQuery();
         $origDQL = $query->getDQL();
 
+        $metadata = $this->getEntityManager()->getClassMetadata($this->getEntityName());
         $getIdent = $metadata->getIdentifier();
         $identifier = isset($getIdent[0]) ? $getIdent[0] : 'id';
 
