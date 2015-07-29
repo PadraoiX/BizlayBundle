@@ -105,7 +105,7 @@ abstract class AbstractRepository extends EntityRepository
         $reflx = new \ReflectionClass($this->getEntityName());
         $reader = new IndexedReader(new AnnotationReader());
 
-        $and = '';
+        $and = ' ';
 
         if (isset($searchData['searchAll']) && trim($searchData['searchAll'])) {
             $props = $reflx->getProperties();
@@ -118,7 +118,7 @@ abstract class AbstractRepository extends EntityRepository
                     if (isset($annons['Doctrine\ORM\Mapping\Column'])) {
                         $pt = $annons['Doctrine\ORM\Mapping\Column']->type;
                         if ($pt == 'string') {
-                            $query->setDQL($query->getDQL() . $and . ' lower(g.' . $attr . ') like lower(:' . $attr . ') ');
+                            $query->setDQL($query->getDQL() . $and . $this->ci('g.' . $attr) . ' like '.$this->ci(':' . $attr));
                             $query->setParameter($attr, '%' . str_replace(' ', '%', trim($searchData['searchAll'])) . '%');
                             $and = ' or ';
                         }
@@ -136,14 +136,17 @@ abstract class AbstractRepository extends EntityRepository
         if (count($searchData)) {
             $count = false;
             $dql = ' where ( ';
+            $arrNum = array('integer', 'int', 'smallint', 'bigint', 'float', 'decimal');
+            $arrDtTm = array('date','datetime','time');
             foreach ($searchData as $field => $criteria) {
                 if (trim($searchData[$field]) != "" && method_exists($this->getEntityName(), 'set' . ucfirst($field))) {
                     $prop = $reflx->getProperty($field);
                     $annons = $reader->getPropertyAnnotations($prop);
                     if (isset($annons['Doctrine\ORM\Mapping\Column'])) {
                         $pt = $annons['Doctrine\ORM\Mapping\Column']->type;
+
                         if ($pt == 'string') {
-                            $dql .= $and . 'lower(g.' . $field . ') like lower(:' . $field . ') ';
+                            $dql .= $and . $this->ci('g.' . $field) . ' like '.$this->ci(':' . $field);
                             $query->setParameter($field, '%' . str_replace(' ', '%', trim($criteria)) . '%');
                             $and = ' and ';
                         }
@@ -152,7 +155,7 @@ abstract class AbstractRepository extends EntityRepository
                             $query->setParameter($field, (bool) trim($criteria));
                             $and = ' and ';
                         }
-                        if ($pt == 'date' || $pt == 'datetime' || $pt == 'time') {
+                        if (in_array($pt, $arrDtTm)) {
 
                             $dql .= $and . 'g.' . $field . ' = :' . $field . ' ';
                             //@TODO - Melhorar isto depois, pelamordedeus
@@ -180,6 +183,12 @@ abstract class AbstractRepository extends EntityRepository
                                     $criteria = \Datetime::createFromFormat('Y-m-d', $criteria);
                                 }
                             }
+                            $query->setParameter($field, $criteria);
+                            $and = ' and ';
+                        }
+                        if (in_array($pt, $arrNum))
+                        {
+                            $dql .= $and . 'g.' . $field . ' = :' . $field . ' ';
                             $query->setParameter($field, $criteria);
                             $and = ' and ';
                         }
@@ -243,6 +252,14 @@ abstract class AbstractRepository extends EntityRepository
         return $query->getScalarResult();
     }
 
+    public function ci($prepareString)
+    {
+//        if ($this->checkPgSql()) {
+//            return 'lower(to_ascii('.$prepareString.'))';
+//        }
+        return 'lower('.$prepareString.')';
+    }
+
     /**
      * Verifica atributos unique em registros ativos
      *
@@ -264,7 +281,7 @@ abstract class AbstractRepository extends EntityRepository
                 $qb = $this->createQueryBuilder('u');
                 $qb->select('u.id')
                    ->andWhere(
-                       $qb->expr()->eq('u.' . $prop->getName(), ':param')
+                       $qb->expr()->eq($this->ci('u.' . $prop->getName()), $this->ci(':param'))
                    )
                    ->setParameter('param', $uniqueParam);
 
