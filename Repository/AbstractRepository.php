@@ -60,6 +60,38 @@ abstract class AbstractRepository extends EntityRepository
     }
 
     /**
+     * Checa se o banco é PostgreSQL
+     */
+    public function checkPgSql()
+    {
+        $params = $this->getEntityManager()->getConnection()->getParams();
+        return (bool) strstr($params['driver'], 'pgsql');
+    }
+
+    /**
+     * Define a sintaxe do orderBy ignorando toda e qualquer limitação de banco de dados.
+     * Criado especificamente para o orderBy Natural Sort no PostgreSQL (não existe ainda
+     * SET LC_COLLATE nessa plataforma).
+     */
+    public function getGeneralOrderBy(&$searchData, &$orderBy, &$sortOrder)
+    {
+        $metadata = $this->getEntityManager()->getClassMetadata($this->getEntityName());
+        $getIdent = $metadata->getIdentifier();
+        $identifier = isset($getIdent[0]) ? $getIdent[0] : 'id';
+
+        /**
+         * @TODO - Criar método para fazer pesquisa natural quando for Postgres
+         * ORDER BY regexp_replace(name, '^([^[:digit:]]*).*$', '\1'),
+         *          regexp_replace(name, '^.*?([[:digit:]]*)$', '\1')::bigint;
+         */
+        $sortOrder = ($searchData['sortOrder']) ? $searchData['sortOrder'] : 'desc';
+        $orderBy = ($searchData['orderBy']) ? $searchData['orderBy'] : 'g.'.$identifier;
+
+        unset($searchData['sortOrder']);
+        unset($searchData['orderBy']);
+    }
+
+    /**
      * Retorn a query genérica de pesquisa para primeiro nível de entidade (Grid de Crud)
      */
     public function getSearchQuery(&$searchData)
@@ -68,14 +100,7 @@ abstract class AbstractRepository extends EntityRepository
         $query = $qb->getQuery();
         $origDQL = $query->getDQL();
 
-        $metadata = $this->getEntityManager()->getClassMetadata($this->getEntityName());
-        $getIdent = $metadata->getIdentifier();
-        $identifier = isset($getIdent[0]) ? $getIdent[0] : 'id';
-
-        $orderBy = ($searchData['orderBy']) ? $searchData['orderBy'] : 'g.'.$identifier;
-        $sortOrder = ($searchData['sortOrder']) ? $searchData['sortOrder'] : 'desc';
-        unset($searchData['orderBy']);
-        unset($searchData['sortOrder']);
+        $this->getGeneralOrderBy($searchData, $orderBy, $sortOrder);
 
         $reflx = new \ReflectionClass($this->getEntityName());
         $reader = new IndexedReader(new AnnotationReader());
@@ -185,14 +210,21 @@ abstract class AbstractRepository extends EntityRepository
             $query->setDQL($query->getDQL() . $and . ' g.statusTuple <> 0 ');
         }
 
+        /**
+         * Workaround para utilizar o QueryBuilder para parsear o orderBy e sortOrder
+         */
         if (isset($orderBy) && $orderBy) {
             $sortOrder = ($sortOrder ? $sortOrder : ' asc ');
-            $finalDql = str_replace(
-                $origDQL,
-                $query->getDQL(),
-                $qb->orderBy($orderBy, $sortOrder)->getQuery()->getDQL()
-            );
-            $query->setDQL($finalDql);
+//            if ($this->checkPgSql()) {
+
+//            } else {
+                $finalDql = str_replace(
+                    $origDQL,
+                    $query->getDQL(),
+                    $qb->orderBy($orderBy, $sortOrder)->getQuery()->getDQL()
+                );
+                $query->setDQL($finalDql);
+//            }
         }
 
         return $query->setHydrationMode(Query::HYDRATE_ARRAY);

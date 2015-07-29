@@ -1,5 +1,9 @@
 # SANSIS - BizlayBUNDLE
 
+## @TODO's
+
+- Criar service para annotations (reduzir a quantidade de código necessário para essas análises)
+
 ## Conceito
 
 O BizlayBundle trabalha com o conceito principal de encapsulamento das regras de negócio e modelo de domínio
