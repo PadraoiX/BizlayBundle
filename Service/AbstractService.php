@@ -86,7 +86,7 @@ abstract class AbstractService
             $req->getHost().
             ':'.
             $req->getPort().
-            '/'.
+//            '/'.
             $req->getBaseUrl();
     }
 
