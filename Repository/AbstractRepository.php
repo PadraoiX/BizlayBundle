@@ -117,7 +117,7 @@ abstract class AbstractRepository extends EntityRepository
                     $annons = $reader->getPropertyAnnotations($prop);
                     if (isset($annons['Doctrine\ORM\Mapping\Column'])) {
                         $pt = $annons['Doctrine\ORM\Mapping\Column']->type;
-                        if ($pt == 'string') {
+                        if ($pt == 'string' || $pt == 'text') {
                             $query->setDQL($query->getDQL() . $and . $this->ci('g.' . $attr) . ' like '.$this->ci(':' . $attr));
                             $query->setParameter($attr, '%' . str_replace(' ', '%', trim($searchData['searchAll'])) . '%');
                             $and = ' or ';
@@ -145,7 +145,7 @@ abstract class AbstractRepository extends EntityRepository
                     if (isset($annons['Doctrine\ORM\Mapping\Column'])) {
                         $pt = $annons['Doctrine\ORM\Mapping\Column']->type;
 
-                        if ($pt == 'string') {
+                        if ($pt == 'string' || $pt == 'text') {
                             $dql .= $and . $this->ci('g.' . $field) . ' like '.$this->ci(':' . $field);
                             $query->setParameter($field, '%' . str_replace(' ', '%', trim($criteria)) . '%');
                             $and = ' and ';
@@ -252,12 +252,17 @@ abstract class AbstractRepository extends EntityRepository
         return $query->getScalarResult();
     }
 
-    public function ci($prepareString)
+    public function ci($prepareString, $pt = 'string')
     {
-//        if ($this->checkPgSql()) {
+        if ($pt == 'text' || $pt == 'string') {
+            //        if ($this->checkPgSql()) {
 //            return 'lower(to_ascii('.$prepareString.'))';
 //        }
-        return 'lower('.$prepareString.')';
+            return 'lower(' . $prepareString . ')';
+        }
+        else {
+            return $prepareString;
+        }
     }
 
     /**
@@ -275,14 +280,15 @@ abstract class AbstractRepository extends EntityRepository
         foreach ($props as $prop) {
             $annons = $reader->getPropertyAnnotations($prop);
             if ($prop->getName() != 'id' && isset($annons['Doctrine\ORM\Mapping\Column']->unique) && $annons['Doctrine\ORM\Mapping\Column']->unique) {
+                $pt = $annons['Doctrine\ORM\Mapping\Column']->type;
                 $getMethod = 'get' . ucfirst($prop->getName());
                 $uniqueParam = $entity->$getMethod();
                 //verificar e adicionar o erro
                 $qb = $this->createQueryBuilder('u');
                 $qb->select('u.id')
-                   ->andWhere(
-                       $qb->expr()->eq($this->ci('u.' . $prop->getName()), $this->ci(':param'))
-                   )
+                    ->andWhere(
+                           $qb->expr()->eq($this->ci('u.' . $prop->getName(), $pt), $this->ci(':param', $pt))
+                       )
                    ->setParameter('param', $uniqueParam);
 
                 $id = $entity->getId();

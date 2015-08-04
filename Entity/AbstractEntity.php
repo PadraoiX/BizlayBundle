@@ -47,7 +47,6 @@ abstract class AbstractEntity
     /**
      * Objeto que contém a instancia atual
      *
-     * @var AbstractEntity
      * @Serializer\Exclude
      */
     protected $__parent = null;
@@ -140,16 +139,35 @@ abstract class AbstractEntity
     /**
      * @return array
      */
-    public function toArray()
+    public function toArray($arrayParentClass = null)
     {
         $data = array();
         if (!in_array($this, self::$__toArray, true)) {
             self::$__toArray[] = $this;
+
+            $ref = new \ReflectionClass($this);
             $methods = get_class_methods($this);
+
             foreach ($methods as $method) {
                 if ('get' === substr($method, 0, 3) && $method != "getErrors") {
+
                     $value = $this->$method();
                     if (\is_array($value) || $value instanceof ArrayCollection || $value instanceof PersistentCollection) {
+
+                        $setmethod = str_replace('get', 'set', $method);
+
+                        $params = $ref->getMethod($setmethod)->getParameters();
+                        $strDoc = $ref->getMethod($setmethod)->getDocComment();
+
+                        $innerClass = null;
+
+                        //Evita o retorno de loop infinito quando entidades possuem uma intersecção manytomany
+                        if (isset($params[0]) && $params[0]->getClass()) {
+                            if (strstr($strDoc, '@innerEntity')) {
+                                $begin = str_replace("\r", '', substr($strDoc, strpos($strDoc, '@innerEntity ') + 13));
+                                $innerClass = substr($begin, 0, strpos($begin, "\n"));
+                            }
+                        }
 
                         /**
                          * @TODO - Filtrar innerEntity para não ter referência circular
@@ -158,7 +176,7 @@ abstract class AbstractEntity
                         foreach ($value as $key => $subvalue) {
                             if ($subvalue instanceof AbstractEntity && $this->__parent !== $subvalue) {
                                 $subvalue->setParent($this);
-                                $subvalues[$key] = $subvalue->toArray();
+                                $subvalues[$key] = $subvalue->toArray($innerClass);
                             } else if ($value instanceof \DateTime) {
                                 $subvalue = $subvalue;
                             } else if (is_object($subvalue) && $this->__parent !== $subvalue) {
@@ -177,6 +195,11 @@ abstract class AbstractEntity
                         $value = $subvalues;
                     }
                     if ($value instanceof AbstractEntity && $this->__parent !== $value) {
+//                        echo $arrayParentClass.'<br>';
+//                        echo str_replace('Proxies\__CG__','',get_class($value)).'<br>';
+                        if ($arrayParentClass == get_class($value)) {
+                            continue;
+                        }
                         $value->setParent($this);
                         $value = $value->toArray();
                     } else if ($value instanceof \DateTime) {
