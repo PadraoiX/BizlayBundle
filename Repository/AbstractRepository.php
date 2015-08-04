@@ -84,8 +84,8 @@ abstract class AbstractRepository extends EntityRepository
          * ORDER BY regexp_replace(name, '^([^[:digit:]]*).*$', '\1'),
          *          regexp_replace(name, '^.*?([[:digit:]]*)$', '\1')::bigint;
          */
-        $sortOrder = ($searchData['sortOrder']) ? $searchData['sortOrder'] : 'desc';
-        $orderBy = ($searchData['orderBy']) ? $searchData['orderBy'] : 'g.'.$identifier;
+        $sortOrder = (isset($searchData['sortOrder']) && $searchData['sortOrder']) ? $searchData['sortOrder'] : 'desc';
+        $orderBy = (isset($searchData['orderBy']) && $searchData['orderBy']) ? $searchData['orderBy'] : 'g.'.$identifier;
 
         unset($searchData['sortOrder']);
         unset($searchData['orderBy']);
