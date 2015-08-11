@@ -154,18 +154,24 @@ abstract class AbstractEntity
                     $value = $this->$method();
                     if (\is_array($value) || $value instanceof ArrayCollection || $value instanceof PersistentCollection) {
 
-                        $setmethod = str_replace('get', 'set', $method);
-
-                        $params = $ref->getMethod($setmethod)->getParameters();
-                        $strDoc = $ref->getMethod($setmethod)->getDocComment();
-
                         $innerClass = null;
 
-                        //Evita o retorno de loop infinito quando entidades possuem uma intersecção manytomany
-                        if (isset($params[0]) && $params[0]->getClass()) {
-                            if (strstr($strDoc, '@innerEntity')) {
-                                $begin = str_replace("\r", '', substr($strDoc, strpos($strDoc, '@innerEntity ') + 13));
-                                $innerClass = substr($begin, 0, strpos($begin, "\n"));
+                        $setmethod = str_replace('get', 'set', $method);
+
+                        /**
+                         * @TODO Analisar depois o impacto desta condicional
+                         */
+                        if (method_exists($this, $setmethod)) {
+
+                            $params = $ref->getMethod($setmethod)->getParameters();
+                            $strDoc = $ref->getMethod($setmethod)->getDocComment();
+
+                            //Evita o retorno de loop infinito quando entidades possuem uma intersecção manytomany
+                            if (isset($params[0]) && $params[0]->getClass()) {
+                                if (strstr($strDoc, '@innerEntity')) {
+                                    $begin = str_replace("\r", '', substr($strDoc, strpos($strDoc, '@innerEntity ') + 13));
+                                    $innerClass = substr($begin, 0, strpos($begin, "\n"));
+                                }
                             }
                         }
 
