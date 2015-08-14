@@ -252,6 +252,19 @@ abstract class AbstractRepository extends EntityRepository
         return $query->getScalarResult();
     }
 
+    /**
+     * Pega todos os dados de uma pesquisa, sem paginação.
+     * Utilizado para exportação de resultados da pesquisa.
+     *
+     * @param  [type] &$searchData [description]
+     * @return [type]              [description]
+     */
+    public function getAllObjSearchData(&$searchData)
+    {
+        $query = $this->getSearchQuery($searchData);
+        return $query->getResult();
+    }
+
     public function ci($prepareString, $pt = 'string')
     {
         if ($pt == 'text' || $pt == 'string') {
