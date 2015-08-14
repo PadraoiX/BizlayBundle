@@ -52,6 +52,13 @@ abstract class AbstractEntity
     protected $__parent = null;
 
     /**
+     * Objeto que contém a instancia atual
+     *
+     * @Serializer\Exclude
+     */
+    protected static $__rootEntity = null;
+
+    /**
      * [$__serializer description]
      * @var null
      */
@@ -145,6 +152,10 @@ abstract class AbstractEntity
         if (!in_array($this, self::$__toArray, true)) {
             self::$__toArray[] = $this;
 
+            if ($this instanceof AbstractEntity && !$this->__parent) {
+                self::$__rootEntity = $this;
+            }
+
             $ref = new \ReflectionClass($this);
             $methods = get_class_methods($this);
 
@@ -233,10 +244,11 @@ abstract class AbstractEntity
             }
         }
 
-        if (!$this->__parent) {
-            self::$__processed =
-            self::$__converted =
+        if (!$this->__parent && self::$__rootEntity == $this) {
+            self::$__processed = array();
+            self::$__converted = array();
             self::$__toArray = array();
+            self::$__rootEntity = null;
         }
 
         $this->__parent = null;
