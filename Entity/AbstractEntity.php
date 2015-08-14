@@ -232,6 +232,15 @@ abstract class AbstractEntity
                 $data = self::$__converted[spl_object_hash($this)];
             }
         }
+
+        if (!$this->__parent) {
+            self::$__processed =
+            self::$__converted =
+            self::$__toArray = array();
+        }
+
+        $this->__parent = null;
+
         return $data;
     }
 
