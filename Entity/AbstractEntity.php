@@ -87,7 +87,7 @@ abstract class AbstractEntity
 
     public function buildFullEmptyEntity()
     {
-        $ref = new \ReflectionClass($this);
+        $ref = $this->correctReflectionClass($this);
 
         $methods = get_class_methods($this);
 
@@ -113,8 +113,8 @@ abstract class AbstractEntity
                         if ($class != get_class($this->__parent)) {
                             if (!in_array($class, self::$__processed)) {
                                 self::$__processed[] = $class;
+                                $subObj = new $class();
                                 if ($subObj instanceof AbstractEntity) {
-                                    $subObj = new $class();
                                     $subObj->setParent($this);
                                     $this->$method($subObj->buildFullEmptyEntity());
                                 }
@@ -196,9 +196,11 @@ abstract class AbstractEntity
                                 if ($subvalue instanceof AbstractEntity && $this->__parent !== $subvalue) {
                                     $subvalue->setParent($this);
                                     $subvalues[$key] = $subvalue->toArray(get_class($subvalue));
-                                } else if ($value instanceof \DateTime) {
-                                    $subvalues = $subvalue;
-                                } else if (is_object($subvalue) && $this->__parent !== $subvalue) {
+                                }
+//                                else if ($value instanceof \DateTime) {
+//                                    $subvalues = $subvalue;
+//                                }
+                                else if (is_object($subvalue) && $this->__parent !== $subvalue) {
                                     /*@TODO - verificar tipo de objeto*/
                                     if (method_exists($subvalue, 'toString')) {
                                         $subvalues = $subvalue->toString();
