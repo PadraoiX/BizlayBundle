@@ -187,61 +187,6 @@ abstract class AbstractEntity
                     //Arrays e Collections
                     if (\is_array($value) || $value instanceof ArrayCollection || $value instanceof PersistentCollection) {
 
-//                        if (strpos($innerClass, '\\') === 0) {
-//                            $innerClass =  substr($innerClass, 1);
-//                        }
-//
-////                        $setmethod = 'set' . substr($method, 3);
-//
-//////                        /**
-//////                         * @TODO Analisar depois o impacto desta condicional
-//////                         */
-////                        if (method_exists($this, $setmethod)) {
-////                            //Corrige reflection para pegar a entidade real da qual o proxy da Doctrine está herdando
-////
-////                            $params = $ref->getMethod($setmethod)->getParameters();
-////                            $strDoc = $ref->getMethod($setmethod)->getDocComment();
-////
-////                            //Evita o retorno de loop infinito quando entidades possuem uma intersecção manytomany ou onetomané
-////                            if (isset($params[0]) && $params[0]->getClass()) {
-////                                if (strstr($strDoc, '@innerEntity')) {
-////                                    $begin = str_replace("\r", '', substr($strDoc, strpos($strDoc, '@innerEntity ') + 13));
-////                                    $inClass = substr($begin, 0, strpos($begin, "\n"));
-////                                    if ($innerClass == $params[0]->getClass()->getName()) {
-////                                        continue;
-////                                    }
-////                                    $innerClass = $inClass;
-////                                }
-////                            }
-////                        }
-//
-//                        //Evita o retorno para add (do jeito que veio)
-//                        $addmethod = 'add'.substr($method, 3);
-//                        if (method_exists($this, $addmethod)) {
-//                            $params = $ref->getMethod($addmethod)->getParameters();
-//                            echo "1-->>>>".$addmethod." ---$innerClass<br>\n";
-//                            if (isset($params[0]) && $params[0]->getClass() && $params[0]->getClass()->getName()) {
-//                                if ($innerClass == $params[0]->getClass()->getName()) {
-//                                    continue;
-//                                }
-//                                echo $innerClass = $params[0]->getClass()->getName()."<br><br>\n\n";
-//                            }
-//                        }
-//
-//                        //Com singularize
-//                        $addmethod = Inflector::singularize($addmethod);
-//                        if (method_exists($this, $addmethod)) {
-//                            $params = $ref->getMethod($addmethod)->getParameters();
-//                            echo "2-->>>>".$addmethod." ---$innerClass<br>\n";
-//                            if (isset($params[0]) && $params[0]->getClass() && $params[0]->getClass()->getName()) {
-//                                if ($innerClass == $params[0]->getClass()->getName()) {
-//                                    echo "FOI";
-//                                    continue;
-//                                }
-//                                echo $innerClass = $params[0]->getClass()->getName()."<br><br>\n\n";
-//                            }
-//                        }
-
                         /**
                          * @TODO - Filtrar innerEntity para não ter referência circular
                          */
@@ -273,33 +218,10 @@ abstract class AbstractEntity
                         //Evita o retorno para sets
                         $setmethod = 'set'.substr($method, 3);
                         $params = $ref->getMethod($setmethod)->getParameters();
-//                        echo 'set--->'.$params[0]->getClass()->getName()."==$innerClass\n<br>";
                         if (isset($params[0]) && $params[0]->getClass() && $params[0]->getClass()->getName() == $innerClass) {
-//                            echo $innerClass;
                             continue;
                         }
 
-//                        //Evita o retorno para add (do jeito que veio)
-//                        $addmethod = 'add'.substr($method, 3);
-//                        if (method_exists($this, $addmethod)) {
-//                            $params = $ref->getMethod($addmethod)->getParameters();
-////                            echo 'add1--->'. $addmethod;
-//                            if (isset($params[0]) && $params[0]->getClass() && $params[0]->getClass()->getName() == $innerClass) {
-////                                echo $innerClass;
-//                                continue;
-//                            }
-//                        }
-//
-//                        //Com singularize
-//                        $addmethod = Inflector::singularize($addmethod);
-//                        if (method_exists($this, $addmethod)) {
-//                            $params = $ref->getMethod($addmethod)->getParameters();
-////                            echo 'add2--->'. $addmethod;
-//                            if (isset($params[0]) && $params[0]->getClass() && $params[0]->getClass()->getName() == $innerClass) {
-////                                echo $innerClass;
-//                                continue;
-//                            }
-//                        }
 
                         $value->setParent($this);
                         $value = $value->toArray($innerClass);
@@ -336,7 +258,6 @@ abstract class AbstractEntity
             self::$__converted = array();
             self::$__toArray = array();
             self::$__rootEntity = null;
-//            die;
         }
 
         /**
