@@ -228,7 +228,7 @@ abstract class AbstractEntity
                         $value->setParent($this);
                         $value = $value->toArray($innerClass);
                     } else if ($value instanceof \DateTime) {
-                        $value = $value;
+                        $value = $value->format('c');
                     } else if (is_object($value) && $this->__parent !== $value) {
                         /*@TODO - verificar tipo de objeto*/
                         if (method_exists($value, 'toString')) {
