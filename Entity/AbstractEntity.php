@@ -127,6 +127,9 @@ abstract class AbstractEntity
                                 $subObj = new $class();
                                 if ($subObj instanceof AbstractEntity) {
                                     $subObj->setParent($this);
+                                    if (!method_exists($this, $method)) {
+                                        $method = Inflector::singularize($method);
+                                    }
                                     $this->$method($subObj->buildFullEmptyEntity());
                                 }
                             }
@@ -217,7 +220,10 @@ abstract class AbstractEntity
                             if (get_class($subvalue) != $innerClass) {
                                 if ($subvalue instanceof AbstractEntity && $this->__parent !== $subvalue) {
                                     $subvalue->setParent($this);
-                                    $subvalues[$key] = $subvalue->toArray($inactives, get_class($subvalue));
+                                    $subvalue = $subvalue->toArray($inactives, get_class($subvalue));
+                                    if ($subvalue) {
+                                        $subvalues[] = $subvalue;
+                                    }
                                 }
 //                                else if ($value instanceof \DateTime) {
 //                                    $subvalues = $subvalue;
@@ -439,11 +445,11 @@ abstract class AbstractEntity
         $method = 'get' . ucfirst($prop);
         if (!$nullable) {
             $val = $this->$method();
-            (is_null($val) || empty($val)) ?
+            ($val === null) ?
                 $this->addError(
                     'Nulo ou Vazio',
                     'O atributo na entidade ' . get_class($this) .
-                    ' não pode ser nulo ou vazio: ' . $prop,
+                    ' não pode ser nulo ou vazio: ' . $prop.'=>'.var_export($val, true),
                     'Doctrine',
                     get_class($this),
                     $prop
