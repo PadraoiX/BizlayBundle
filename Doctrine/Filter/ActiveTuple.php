@@ -7,7 +7,18 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 /**
  * Class ActiveTuple
  *
- * Define nomes de campos
+ * Define nomes de campos para serem excluídos em pesquisas. Para habilitar, mapeie no seu config.yml
+ *
+ *    orm:
+ *      default_entity_manager: default
+ *        entity_managers:
+ *          default:
+ *            connection: default
+ *              filters:
+ *                active_tuple:
+ *                  class:   \SanSIS\BizlayBundle\Doctrine\Filter\ActiveTuple
+ *                  enabled: true
+ *
  *
  * @package SanSIS\BizlayBundle\Doctrine\Filter
  */
@@ -20,7 +31,7 @@ class ActiveTuple extends SQLFilter
         'flActive'      => '<> false',
         'isActive'      => '<> false',
         'statusTuple'   => '<> 0',
-        
+
     );
 
     /**
