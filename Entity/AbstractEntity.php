@@ -60,6 +60,17 @@ abstract class AbstractEntity
     protected static $__rootEntity = null;
 
     /**
+     * Objeto que contém a instancia atual
+     *
+     * @Serializer\Exclude
+     */
+    protected static $__inactiveMethods = array(
+        "getIsActive",
+        "getFlActive",
+        "getStatusTuple"
+    );
+
+    /**
      * [$__serializer description]
      * @var null
      */
@@ -161,10 +172,21 @@ abstract class AbstractEntity
 
 
     /**
+     * @param bool|false $inactives - processa ou não registros marcados como excluídos logicamente
+     * @param null $innerClass - nome da classe interna para evitar retornos de referência circular
      * @return array
      */
-    public function toArray($innerClass = null)
+    public function toArray($inactives = false, $innerClass = null)
     {
+        if (!$inactives) {
+            foreach(self::$__inactiveMethods as $method) {
+                if (method_exists($this, $method)) {
+                    if (!$this->$method()) {
+                        return null;
+                    }
+                }
+            }
+        }
         $data = array();
         if (!in_array($this, self::$__toArray, true)) {
             self::$__toArray[] = $this;
@@ -195,7 +217,7 @@ abstract class AbstractEntity
                             if (get_class($subvalue) != $innerClass) {
                                 if ($subvalue instanceof AbstractEntity && $this->__parent !== $subvalue) {
                                     $subvalue->setParent($this);
-                                    $subvalues[$key] = $subvalue->toArray(get_class($subvalue));
+                                    $subvalues[$key] = $subvalue->toArray($inactives, get_class($subvalue));
                                 }
 //                                else if ($value instanceof \DateTime) {
 //                                    $subvalues = $subvalue;
@@ -225,7 +247,7 @@ abstract class AbstractEntity
                         }
 
                         $value->setParent($this);
-                        $value = $value->toArray($innerClass);
+                        $value = $value->toArray($inactives, $innerClass);
                     } else if ($value instanceof \DateTime) {
                         $value = $value->format('c');
                     } else if (is_object($value) && $this->__parent !== $value) {

@@ -25,10 +25,6 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 class ActiveTuple extends SQLFilter
 {
     static $pairsStatusValue = array(
-        'fl_active'     => '<> false',
-        'is_active'     => '<> false',
-        'status_tuple'  => '<> 0',
-        'flActive'      => '<> false',
         'isActive'      => '<> false',
         'statusTuple'   => '<> 0',
 
@@ -41,23 +37,12 @@ class ActiveTuple extends SQLFilter
      */
     public function addFilterConstraint(ClassMetadata $targetEntity, $targetTableAlias)
     {
-        $exists = false;
-
         // Check if the entity implements the SoftDelete interface
         foreach($targetEntity->fieldMappings as $k => $field) {
-            $colName = $field['columnName'];
-
-            if (isset(self::$pairsStatusValue[$colName])) {
-                $exists = true;
-                $attr = $colName;
-                break;
+            if (isset(self::$pairsStatusValue[$field['fieldName']])) {
+                return $targetTableAlias.'.'.$field['columnName'].' '.self::$pairsStatusValue[$field['fieldName']];
             }
         }
-
-        if (!$exists){
-            return "";
-        }
-
-        return $targetTableAlias.'.'.$attr.' '.self::$pairsStatusValue[$attr];
+        return "";
     }
 }
