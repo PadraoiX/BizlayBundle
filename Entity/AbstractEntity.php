@@ -224,7 +224,6 @@ abstract class AbstractEntity
                             continue;
                         }
 
-
                         $value->setParent($this);
                         $value = $value->toArray($innerClass);
                     } else if ($value instanceof \DateTime) {
