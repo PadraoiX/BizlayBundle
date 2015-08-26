@@ -406,7 +406,7 @@ abstract class AbstractEntity
                     is_float($val) ? true : $this->addError('Tipo', 'O atributo não é um float: ' . get_class($this) . '::' . $prop . ' => ' . $val . ' ( nullable : ' . (int)$nullable . ')');
                     break;
                 case in_array($type, array('boolean')):
-                    is_bool($val) ? true : $this->addError('Tipo', 'O atributo não é um boolean: ' . get_class($this) . '::' . $prop . ' => ' . $val . ' ( nullable : ' . (int)$nullable . ')');
+                    (is_bool($val) || $val == '1' || $val == '0') ? true : $this->addError('Tipo', 'O atributo não é um boolean: ' . get_class($this) . '::' . $prop . ' => ' . $val . ' ( nullable : ' . (int)$nullable . ')');
                     break;
                 case in_array($type, array('date', 'datetime', 'datetimetx', 'time')):
                     ($val instanceof \DateTime) ? true : $this->addError('Tipo', 'O atributo não é um date/datetime/time: ' . get_class($this) . '::' . $prop . ' => ' . $val->format('Y-m-d H:i:s') . ' ( nullable : ' . (int)$nullable . ')');
