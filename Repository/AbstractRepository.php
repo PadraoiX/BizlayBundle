@@ -208,16 +208,7 @@ abstract class AbstractRepository extends EntityRepository
             $and = ' where ';
         }
 
-        $boolAttr = $reflx->hasProperty('isActive') ? 'isActive' : ($reflx->hasProperty('flActive') ? 'flActive' : false);
-
-        if ($boolAttr) {
-            $query->setDQL($query->getDQL() . $and . ' g.' . $boolAttr . ' = :boolFlag');
-            $query->setParameter('boolFlag', true);
-        }
-
-        if ($reflx->hasProperty('statusTuple')) {
-            $query->setDQL($query->getDQL() . $and . ' g.statusTuple <> 0 ');
-        }
+        $this->filterInactives($reflx, $query, $and);
 
         /**
          * Workaround para utilizar o QueryBuilder para parsear o orderBy e sortOrder
@@ -239,12 +230,26 @@ abstract class AbstractRepository extends EntityRepository
         return $query->setHydrationMode(Query::HYDRATE_ARRAY);
     }
 
+    public function filterInactives($reflx, $query, $and)
+    {
+        $boolAttr = $reflx->hasProperty('isActive') ? 'isActive' : ($reflx->hasProperty('flActive') ? 'flActive' : false);
+
+        if ($boolAttr) {
+            $query->setDQL($query->getDQL() . $and . ' g.' . $boolAttr . ' = :boolFlag');
+            $query->setParameter('boolFlag', true);
+        }
+
+        if ($reflx->hasProperty('statusTuple')) {
+            $query->setDQL($query->getDQL() . $and . ' g.statusTuple <> 0 ');
+        }
+    }
+
     /**
      * Pega todos os dados de uma pesquisa, sem paginação.
      * Utilizado para exportação de resultados da pesquisa.
      *
-     * @param  [type] &$searchData [description]
-     * @return [type]              [description]
+     * @param  array &$searchData [description]
+     * @return array              [description]
      */
     public function getAllSearchData(&$searchData)
     {
@@ -256,8 +261,8 @@ abstract class AbstractRepository extends EntityRepository
      * Pega todos os dados de uma pesquisa, sem paginação.
      * Utilizado para exportação de resultados da pesquisa.
      *
-     * @param  [type] &$searchData [description]
-     * @return [type]              [description]
+     * @param  array &$searchData [description]
+     * @return array              [description]
      */
     public function getAllObjSearchData(&$searchData)
     {
@@ -282,7 +287,7 @@ abstract class AbstractRepository extends EntityRepository
      * Verifica atributos unique em registros ativos
      *
      * @param  ServiceDto $dto [description]
-     * @return [type]          [description]
+     * @return null          [description]
      */
     public function checkUnique(ServiceDto $dto, AbstractEntity $entity)
     {

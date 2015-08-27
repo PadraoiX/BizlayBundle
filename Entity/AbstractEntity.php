@@ -11,6 +11,7 @@ use \Doctrine\ORM\PersistentCollection;
 use \JMS\Serializer\Annotation as Serializer;
 use \JMS\Serializer\SerializerBuilder;
 use \SanSIS\BizlayBundle\Entity\Exception\ValidationException;
+use Knp\JsonSchemaBundle\Annotations as JSON;
 
 /**
  * Class AbstractEntity
@@ -22,18 +23,21 @@ abstract class AbstractEntity
     /**
      * @var array
      * @Serializer\Exclude
+     * @JSON\Ignore
      */
     protected static $__toArray = array();
 
     /**
      * @var array
      * @Serializer\Exclude
+     * @JSON\Ignore
      */
     protected static $__converted = array();
 
     /**
      * @var array
      * @Serializer\Exclude
+     * @JSON\Ignore
      */
     protected static $__processed = array();
 
@@ -42,6 +46,7 @@ abstract class AbstractEntity
      *
      * @var array
      * @Serializer\Exclude
+     * @JSON\Ignore
      */
     protected static $__errors = array();
 
@@ -49,6 +54,7 @@ abstract class AbstractEntity
      * Objeto que contém a instancia atual
      *
      * @Serializer\Exclude
+     * @JSON\Ignore
      */
     protected $__parent = null;
 
@@ -56,6 +62,7 @@ abstract class AbstractEntity
      * Objeto que contém a instancia atual
      *
      * @Serializer\Exclude
+     * @JSON\Ignore
      */
     protected static $__rootEntity = null;
 
@@ -63,6 +70,7 @@ abstract class AbstractEntity
      * Objeto que contém a instancia atual
      *
      * @Serializer\Exclude
+     * @JSON\Ignore
      */
     protected static $__inactiveMethods = array(
         "getIsActive",
@@ -73,6 +81,8 @@ abstract class AbstractEntity
     /**
      * [$__serializer description]
      * @var null
+     * @Serializer\Exclude
+     * @JSON\Ignore
      */
     protected static $__serializer = null;
 
