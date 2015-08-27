@@ -73,7 +73,7 @@ abstract class AbstractRepository extends EntityRepository
      * Criado especificamente para o orderBy Natural Sort no PostgreSQL (não existe ainda
      * SET LC_COLLATE nessa plataforma).
      */
-    public function getGeneralOrderBy(&$searchData, &$orderBy, &$sortOrder)
+    public function getSeachQueryOrderBy(&$searchData, &$orderBy, &$sortOrder)
     {
         $metadata = $this->getEntityManager()->getClassMetadata($this->getEntityName());
         $getIdent = $metadata->getIdentifier();
@@ -92,122 +92,43 @@ abstract class AbstractRepository extends EntityRepository
     }
 
     /**
+     * Retorna o QueryBuilder genérico, sem joins Sobrescreva para pesquisas cujo retorno deve ter join básico
+     *
+     * @return \Doctrine\ORM\QueryBuilder
+     */
+    public function getSeachQueryBuilder()
+    {
+        return $this->createQueryBuilder('g');
+    }
+
+    /**
      * Retorn a query genérica de pesquisa para primeiro nível de entidade (Grid de Crud)
      */
     public function getSearchQuery(&$searchData)
     {
-        $qb = $this->createQueryBuilder('g');
-        $query = $qb->getQuery();
-        $origDQL = $query->getDQL();
-
-        $this->getGeneralOrderBy($searchData, $orderBy, $sortOrder);
+        //Método que pode ser sobrescrito para joins simples
+        $qb = $this->getSeachQueryBuilder();
 
         $reflx = new \ReflectionClass($this->getEntityName());
         $reader = new IndexedReader(new AnnotationReader());
-
+        $query = $qb->getQuery();
+        $origDQL = $query->getDQL();
         $and = ' ';
 
+        $this->getSeachQueryOrderBy($searchData, $orderBy, $sortOrder);
+
+        //Fazendo pesquisa com o searchAll nos atributos do primeiro nível - sobrescrever para outros
         if (isset($searchData['searchAll']) && trim($searchData['searchAll'])) {
-            $props = $reflx->getProperties();
-
-            if (count($props)) {
-                $query->setDQL($query->getDQL() . ' where ( ');
-                foreach ($props as $prop) {
-                    $attr = $prop->getName();
-                    $annons = $reader->getPropertyAnnotations($prop);
-                    if (isset($annons['Doctrine\ORM\Mapping\Column'])) {
-                        $pt = $annons['Doctrine\ORM\Mapping\Column']->type;
-                        if ($pt == 'string' || $pt == 'text') {
-                            $query->setDQL($query->getDQL() . $and . $this->ci('g.' . $attr) . ' like '.$this->ci(':' . $attr));
-                            $query->setParameter($attr, '%' . str_replace(' ', '%', trim($searchData['searchAll'])) . '%');
-                            $and = ' or ';
-                        }
-                    }
-                }
-
-                $query->setDQL($query->getDQL() . ' ) ');
-
-                $and = ' and ';
-            } else {
-                $and = ' where ';
-            }
-
-        } else
-        if (count($searchData)) {
-            $count = false;
-            $dql = ' where ( ';
-            $arrNum = array('integer', 'int', 'smallint', 'bigint', 'float', 'decimal');
-            $arrDtTm = array('date','datetime','time');
-            foreach ($searchData as $field => $criteria) {
-                if (trim($searchData[$field]) != "" && method_exists($this->getEntityName(), 'set' . ucfirst($field))) {
-                    $prop = $reflx->getProperty($field);
-                    $annons = $reader->getPropertyAnnotations($prop);
-                    if (isset($annons['Doctrine\ORM\Mapping\Column'])) {
-                        $pt = $annons['Doctrine\ORM\Mapping\Column']->type;
-
-                        if ($pt == 'string' || $pt == 'text') {
-                            $dql .= $and . $this->ci('g.' . $field) . ' like '.$this->ci(':' . $field);
-                            $query->setParameter($field, '%' . str_replace(' ', '%', trim($criteria)) . '%');
-                            $and = ' and ';
-                        }
-                        if ($pt == 'boolean') {
-                            $dql .= $and . 'g.' . $field . ' = :' . $field . ' ';
-                            $query->setParameter($field, (bool) trim($criteria));
-                            $and = ' and ';
-                        }
-                        if (in_array($pt, $arrDtTm)) {
-
-                            $dql .= $and . 'g.' . $field . ' = :' . $field . ' ';
-                            //@TODO - Melhorar isto depois, pelamordedeus
-
-                            if (strstr($criteria, 'T')) {
-                                $criteria = explode('T', $criteria);
-                                if (strstr($criteria[1], '.')) {
-                                    $time = explode('.', $criteria[1]);
-                                } else {
-                                    $time = explode('-', $criteria[1]);
-                                }
-                                $criteria = $criteria[0] . ' ' . $time[0];
-                            }
-
-                            if (strstr($criteria, '/')) {
-                                if (strstr($criteria, ':')) {
-                                    $criteria = \Datetime::createFromFormat('d/m/Y H:i:s', $criteria);
-                                } else {
-                                    $criteria = \Datetime::createFromFormat('d/m/Y', $criteria);
-                                }
-                            } else {
-                                if (strstr($criteria, ':')) {
-                                    $criteria = \Datetime::createFromFormat('Y-m-d H:i:s', $criteria);
-                                } else {
-                                    $criteria = \Datetime::createFromFormat('Y-m-d', $criteria);
-                                }
-                            }
-                            $query->setParameter($field, $criteria);
-                            $and = ' and ';
-                        }
-                        if (in_array($pt, $arrNum))
-                        {
-                            $dql .= $and . 'g.' . $field . ' = :' . $field . ' ';
-                            $query->setParameter($field, $criteria);
-                            $and = ' and ';
-                        }
-                    }
-                    $count = true;
-                } else {
-                    unset($searchData[$field]);
-                }
-            }
-            $dql .= ' ) ';
-            if ($count) {
-                $query->setDQL($query->getDQL() . $dql);
-            } else {
-                $and = ' where ';
-            }
+            $this->getSearchAllDefaultQuery($reflx, $query, $reader, $and, $searchData);
+        }
+        //Fazendo pesquisa com o searchData nos atributos do primeiro nível - sobrescrever para outros
+        else if (count($searchData)) {
+            $this->getSearchDataDefaultQuery($reflx, $query, $reader, $and, $searchData);
         } else {
             $and = ' where ';
         }
 
+        //Filtra os registros inativos no primeiro nível. Sobrescrever para outros níveis
         $this->filterInactives($reflx, $query, $and);
 
         /**
@@ -230,7 +151,134 @@ abstract class AbstractRepository extends EntityRepository
         return $query->setHydrationMode(Query::HYDRATE_ARRAY);
     }
 
-    public function filterInactives($reflx, $query, $and)
+    /**
+     * Fazendo pesquisa com o searchAll nos atributos do primeiro nível - sobrescrever para outros
+     *
+     * @param $reflx
+     * @param $query
+     * @param $reader
+     * @param $and
+     * @param $searchData
+     */
+    public function getSearchAllDefaultQuery($reflx, $query, $reader, &$and, &$searchData)
+    {
+        $props = $reflx->getProperties();
+
+        if (count($props)) {
+            $query->setDQL($query->getDQL() . ' where ( ');
+            foreach ($props as $prop) {
+                $attr = $prop->getName();
+                $annons = $reader->getPropertyAnnotations($prop);
+                if (isset($annons['Doctrine\ORM\Mapping\Column'])) {
+                    $pt = $annons['Doctrine\ORM\Mapping\Column']->type;
+                    if ($pt == 'string' || $pt == 'text') {
+                        $query->setDQL($query->getDQL() . $and . $this->ci('g.' . $attr) . ' like '.$this->ci(':' . $attr));
+                        $query->setParameter($attr, '%' . str_replace(' ', '%', trim($searchData['searchAll'])) . '%');
+                        $and = ' or ';
+                    }
+                }
+            }
+
+            $query->setDQL($query->getDQL() . ' ) ');
+
+            $and = ' and ';
+        } else {
+            $and = ' where ';
+        }
+
+    }
+
+    /**
+     * Fazendo pesquisa com o searchData nos atributos do primeiro nível - sobrescrever para outros
+     *
+     * @param $reflx
+     * @param $query
+     * @param $reader
+     * @param $and
+     * @param $searchData
+     */
+    public function getSearchDataDefaultQuery($reflx, $query, $reader, &$and, &$searchData)
+    {
+        $count = false;
+        $dql = ' where ( ';
+        $arrNum = array('integer', 'int', 'smallint', 'bigint', 'float', 'decimal');
+        $arrDtTm = array('date','datetime','time');
+        foreach ($searchData as $field => $criteria) {
+            if (trim($searchData[$field]) != "" && method_exists($this->getEntityName(), 'set' . ucfirst($field))) {
+                $prop = $reflx->getProperty($field);
+                $annons = $reader->getPropertyAnnotations($prop);
+                if (isset($annons['Doctrine\ORM\Mapping\Column'])) {
+                    $pt = $annons['Doctrine\ORM\Mapping\Column']->type;
+
+                    if ($pt == 'string' || $pt == 'text') {
+                        $dql .= $and . $this->ci('g.' . $field) . ' like '.$this->ci(':' . $field);
+                        $query->setParameter($field, '%' . str_replace(' ', '%', trim($criteria)) . '%');
+                        $and = ' and ';
+                    }
+                    if ($pt == 'boolean') {
+                        $dql .= $and . 'g.' . $field . ' = :' . $field . ' ';
+                        $query->setParameter($field, (bool) trim($criteria));
+                        $and = ' and ';
+                    }
+                    if (in_array($pt, $arrDtTm)) {
+
+                        $dql .= $and . 'g.' . $field . ' = :' . $field . ' ';
+                        //@TODO - Melhorar isto depois, pelamordedeus
+
+                        if (strstr($criteria, 'T')) {
+                            $criteria = explode('T', $criteria);
+                            if (strstr($criteria[1], '.')) {
+                                $time = explode('.', $criteria[1]);
+                            } else {
+                                $time = explode('-', $criteria[1]);
+                            }
+                            $criteria = $criteria[0] . ' ' . $time[0];
+                        }
+
+                        if (strstr($criteria, '/')) {
+                            if (strstr($criteria, ':')) {
+                                $criteria = \Datetime::createFromFormat('d/m/Y H:i:s', $criteria);
+                            } else {
+                                $criteria = \Datetime::createFromFormat('d/m/Y', $criteria);
+                            }
+                        } else {
+                            if (strstr($criteria, ':')) {
+                                $criteria = \Datetime::createFromFormat('Y-m-d H:i:s', $criteria);
+                            } else {
+                                $criteria = \Datetime::createFromFormat('Y-m-d', $criteria);
+                            }
+                        }
+                        $query->setParameter($field, $criteria);
+                        $and = ' and ';
+                    }
+                    if (in_array($pt, $arrNum))
+                    {
+                        $dql .= $and . 'g.' . $field . ' = :' . $field . ' ';
+                        $query->setParameter($field, $criteria);
+                        $and = ' and ';
+                    }
+                }
+                $count = true;
+            } else {
+                unset($searchData[$field]);
+            }
+        }
+        $dql .= ' ) ';
+        if ($count) {
+            $query->setDQL($query->getDQL() . $dql);
+        } else {
+            $and = ' where ';
+        }
+    }
+
+    /**
+     * Filtra os registros inativos no primeiro nível. Sobrescrever para outros níveis
+     *
+     * @param $reflx
+     * @param $query
+     * @param $and
+     */
+    public function filterInactives($reflx, $query, &$and)
     {
         $boolAttr = $reflx->hasProperty('isActive') ? 'isActive' : ($reflx->hasProperty('flActive') ? 'flActive' : false);
 
