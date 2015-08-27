@@ -87,8 +87,19 @@ abstract class AbstractRepository extends EntityRepository
         $sortOrder = (isset($searchData['sortOrder']) && $searchData['sortOrder']) ? $searchData['sortOrder'] : 'desc';
         $orderBy = (isset($searchData['orderBy']) && $searchData['orderBy']) ? $searchData['orderBy'] : 'g.'.$identifier;
 
-        unset($searchData['sortOrder']);
-        unset($searchData['orderBy']);
+        $this->searchQueryFilterOrderBy($orderBy);
+    }
+
+    /**
+     * Normalmente pode ser necessário sobrescrever este método para tratar o nome que a interface submete para
+     * o orderBy
+     *
+     * @param $orderBy
+     * @return mixed
+     */
+    public function searchQueryFilterOrderBy(&$orderBy)
+    {
+        return $orderBy;
     }
 
     /**
@@ -115,7 +126,12 @@ abstract class AbstractRepository extends EntityRepository
         $origDQL = $query->getDQL();
         $and = ' ';
 
+        /**
+         * Processado antes para evitar que seja utilizado nos loops
+         */
         $this->getSeachQueryOrderBy($searchData, $orderBy, $sortOrder);
+        unset($searchData['sortOrder']);
+        unset($searchData['orderBy']);
 
         //Fazendo pesquisa com o searchAll nos atributos do primeiro nível - sobrescrever para outros
         if (isset($searchData['searchAll']) && trim($searchData['searchAll'])) {
