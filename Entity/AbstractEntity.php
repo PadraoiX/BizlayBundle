@@ -11,12 +11,13 @@ use \Doctrine\ORM\PersistentCollection;
 use \JMS\Serializer\Annotation as Serializer;
 use \JMS\Serializer\SerializerBuilder;
 use \SanSIS\BizlayBundle\Entity\Exception\ValidationException;
-use Knp\JsonSchemaBundle\Annotations as JSON;
+//use Knp\JsonSchemaBundle\Annotations as JSON;
 
 /**
  * Class AbstractEntity
  * @package SanSIS\BizlayBundle\Entity
  * @Serializer\ExclusionPolicy("all")
+ * @Doctrine\Common\Annotations\Annotation\IgnoreAnnotation("JSON\Ignore")
  */
 abstract class AbstractEntity
 {
