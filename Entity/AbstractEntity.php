@@ -396,7 +396,6 @@ abstract class AbstractEntity
         }
 
         if ($this->hasErrors()) {
-            die('asdf');
             throw new ValidationException($this->getErrors());
         }
     }
