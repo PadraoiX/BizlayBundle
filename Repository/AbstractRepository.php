@@ -241,29 +241,7 @@ abstract class AbstractRepository extends EntityRepository
                         $dql .= $and . 'g.' . $field . ' = :' . $field . ' ';
                         //@TODO - Melhorar isto depois, pelamordedeus
 
-                        if (strstr($criteria, 'T')) {
-                            $criteria = explode('T', $criteria);
-                            if (strstr($criteria[1], '.')) {
-                                $time = explode('.', $criteria[1]);
-                            } else {
-                                $time = explode('-', $criteria[1]);
-                            }
-                            $criteria = $criteria[0] . ' ' . $time[0];
-                        }
-
-                        if (strstr($criteria, '/')) {
-                            if (strstr($criteria, ':')) {
-                                $criteria = \Datetime::createFromFormat('d/m/Y H:i:s', $criteria);
-                            } else {
-                                $criteria = \Datetime::createFromFormat('d/m/Y', $criteria);
-                            }
-                        } else {
-                            if (strstr($criteria, ':')) {
-                                $criteria = \Datetime::createFromFormat('Y-m-d H:i:s', $criteria);
-                            } else {
-                                $criteria = \Datetime::createFromFormat('Y-m-d', $criteria);
-                            }
-                        }
+                        $criteria = $this->getCriteriaDate($criteria);
                         $query->setParameter($field, $criteria);
                         $and = ' and ';
                     }
@@ -285,6 +263,38 @@ abstract class AbstractRepository extends EntityRepository
         } else {
             $and = ' where ';
         }
+    }
+
+    /**
+     * @param $criteria
+     * @return \DateTime
+     */
+    public function getCriteriaDate($criteria)
+    {
+        if (strstr($criteria, 'T')) {
+            $criteria = explode('T', $criteria);
+            if (strstr($criteria[1], '.')) {
+                $time = explode('.', $criteria[1]);
+            } else {
+                $time = explode('-', $criteria[1]);
+            }
+            $criteria = $criteria[0] . ' ' . $time[0];
+        }
+
+        if (strstr($criteria, '/')) {
+            if (strstr($criteria, ':')) {
+                $criteria = \Datetime::createFromFormat('d/m/Y H:i:s', $criteria);
+            } else {
+                $criteria = \Datetime::createFromFormat('d/m/Y', $criteria);
+            }
+        } else {
+            if (strstr($criteria, ':')) {
+                $criteria = \Datetime::createFromFormat('Y-m-d H:i:s', $criteria);
+            } else {
+                $criteria = \Datetime::createFromFormat('Y-m-d', $criteria);
+            }
+        }
+        return $criteria;
     }
 
     /**
