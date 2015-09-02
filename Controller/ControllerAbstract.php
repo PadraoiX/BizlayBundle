@@ -2,16 +2,14 @@
 
 namespace SanSIS\BizlayBundle\Controller;
 
-use \Doctrine\Common\Annotations\AnnotationReader;
-use \FOS\RestBundle\Controller\FOSRestController;
-use \JMS\DiExtraBundle\Annotation as DI;
-use \SanSIS\BizlayBundle\Entity\AbstractEntity;
-use \SanSIS\BizlayBundle\Service\ServiceData;
-use \Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
-use \Symfony\Bundle\FrameworkBundle\Controller\Controller;
-use \Symfony\Component\DependencyInjection\ContainerInterface;
-use \Symfony\Component\HttpFoundation\Response;
-use \Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Doctrine\Common\Annotations\AnnotationReader;
+use FOS\RestBundle\Controller\FOSRestController;
+use JMS\DiExtraBundle\Annotation as DI;
+use SanSIS\BizlayBundle\Entity\AbstractEntity;
+use SanSIS\BizlayBundle\Service\ServiceData;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 abstract class ControllerAbstract extends FOSRestController
 {
@@ -360,9 +358,9 @@ abstract class ControllerAbstract extends FOSRestController
      * @param  [type] $arr [description]
      * @return [type]      [description]
      */
-    public function renderExcel($arr, $cab = null, $cols = null)
+    public function renderExcel($arr, $cab = null, $cols = null, $ignoreCols = null, $logo = null)
     {
-        $this->exportArrayToExcel($arr, $cab, $cols);
+        $this->exportArrayToExcel($arr, $cab, $cols, $ignoreCols = null, $logo = null);
     }
 
     /**
@@ -372,7 +370,7 @@ abstract class ControllerAbstract extends FOSRestController
      * @throws \PHPExcel_Exception
      * @throws \PHPExcel_Reader_Exception
      */
-    public function exportArrayToExcel($arr, $cab = null, $cols = null)
+    public function exportArrayToExcel($arr, $cab = null, $cols = null, $ignoreCols = null, $logo = null)
     {
         if (!$cab) {
             $cab = $this->setExportHeader($arr);
@@ -380,14 +378,22 @@ abstract class ControllerAbstract extends FOSRestController
         if (!empty($cols)) {
             $arr = $this->filterCols($arr, $cols);
         }
+        if (!empty($ignoreCols)) {
+            foreach($ignoreCols as $col) {
+                foreach($arr as $r => $row) {
+                    foreach($row as $c => $v) {
+                        if ($c == $col) {
+                            unset($arr[$r][$c]);
+                        }
+                    }
+                }
+            }
+            $arr = $this->filterCols($arr, $cols);
+        }
 
         //Cria o excel e adiciona o conteúdo a ele
         $excel = new \PHPExcel();
         $sheet = $excel->setActiveSheetIndex(0);
-        // //cabeçalho
-        $sheet->fromArray($cab, null, 'A14');
-        // //corpo
-        $sheet->fromArray($arr, null, 'A15');
         // autosize cols
         if (!empty($cols)) {
             for ($col = 'A', $i = 0; $i < count($cols); $col++, $i++) {
@@ -395,15 +401,35 @@ abstract class ControllerAbstract extends FOSRestController
                 $excel->getActiveSheet()->getStyle($col . "14")->getFont()->setBold(true);
             }
         }
-        $excel->getActiveSheet()->getStyle('A11:I11')->getAlignment()->setHorizontal(\PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
-        $excel->getActiveSheet()->getStyle('A12:I12')->getAlignment()->setHorizontal(\PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
-        $excel->getActiveSheet()->getStyle('A11:I11')->getFont()->setBold(true);
-        $excel->getActiveSheet()->getStyle('A12:I12')->getFont()->setBold(true);
-        $excel->setActiveSheetIndex(0)->mergeCells('A11:I11');
-        $excel->setActiveSheetIndex(0)->mergeCells('A12:I12');
-        $excel->setActiveSheetIndex(0)->setCellValue('A11', $this->institutionalTitle);
-        $excel->setActiveSheetIndex(0)->setCellValue('A12', $this->institutionalSubscription);
-        $this->drawLogo($excel);
+
+        $rowBegin = 1;
+        //Se tiver imagem
+        if ($logo) {
+            $this->drawLogo($excel, $logo);
+            $rowBegin += 9;
+        }
+
+        if ($this->institutionalTitle) {
+            $excel->getActiveSheet()->getStyle('A' . $rowBegin . ':I' . $rowBegin)->getAlignment()->setHorizontal(\PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+            $excel->getActiveSheet()->getStyle('A' . $rowBegin . ':I' . $rowBegin)->getFont()->setBold(true);
+            $excel->setActiveSheetIndex(0)->mergeCells('A' . $rowBegin . ':I' . $rowBegin);
+            $excel->setActiveSheetIndex(0)->setCellValue('A' . $rowBegin, $this->institutionalTitle);
+            $rowBegin += 1;
+        }
+
+        if($this->institutionalSubscription) {
+            $excel->getActiveSheet()->getStyle('A' . $rowBegin . ':I' . $rowBegin )->getAlignment()->setHorizontal(\PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+            $excel->getActiveSheet()->getStyle('A' . $rowBegin . ':I' . $rowBegin )->getFont()->setBold(true);
+            $excel->setActiveSheetIndex(0)->mergeCells('A' . $rowBegin . ':I' . $rowBegin );
+            $excel->setActiveSheetIndex(0)->setCellValue('A' . $rowBegin , $this->institutionalSubscription);
+            $rowBegin += 1;
+        }
+
+        // //cabeçalho
+        $sheet->fromArray($cab, null, 'A'.++$rowBegin);
+        // //corpo
+        $sheet->fromArray($arr, null, 'A'.++$rowBegin);
+
         // Redirect output to a client’s web browser (Excel5)
         header('Content-Type: application/vnd.ms-excel');
         header('Content-Disposition: attachment;filename="export.xls"');
@@ -413,16 +439,18 @@ abstract class ControllerAbstract extends FOSRestController
         exit;
     }
 
-    private function drawLogo($phpExcelObject)
+    private function drawLogo($phpExcelObject, $logo = null)
     {
-        $objDrawing = new \PHPExcel_Worksheet_Drawing;
-        $objDrawing->setName('Logo');
-        $objDrawing->setDescription('Logo');
-        $objDrawing->setPath('images/logo-relatorio-pequena-excel.png')
-                   ->setResizeProportional(false)
-                   ->setOffsetX(20)
-                   ->setOffsetY(5)
-                   ->setWorksheet($phpExcelObject->getActiveSheet());
+        if ($logo) {
+            $objDrawing = new \PHPExcel_Worksheet_Drawing;
+            $objDrawing->setName('Logo');
+            $objDrawing->setDescription('Logo');
+            $objDrawing->setPath($logo)
+                ->setResizeProportional(false)
+                ->setOffsetX(20)
+                ->setOffsetY(5)
+                ->setWorksheet($phpExcelObject->getActiveSheet());
+        }
     }
 
     /**
@@ -438,7 +466,9 @@ abstract class ControllerAbstract extends FOSRestController
         $newArrItem = array();
         for ($i = 0; $i < count($arr); $i++) {
             foreach ($cols as $index) {
-                $newArrItem[$index] = $arr[$i][$index];
+                if (isset($arr[$i][$index])) {
+                    $newArrItem[$index] = $arr[$i][$index];
+                }
             }
             array_push($newArr, $newArrItem);
         }
@@ -482,7 +512,7 @@ abstract class ControllerAbstract extends FOSRestController
      * @param  [type] $arr [description]
      * @return [type]      [description]
      */
-    public function renderPdf($data, $cab = null, $cols = null, $template = 'BizlayBundle::exportpdf.html.twig')
+    public function renderPdf($data, $cab = null, $cols = null, $ignoreCols = null, $template = 'BizlayBundle::exportpdf.html.twig')
     {
         if (!$cab) {
             $cab = $this->setExportHeader($data);
