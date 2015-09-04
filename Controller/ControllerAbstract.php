@@ -360,7 +360,25 @@ abstract class ControllerAbstract extends FOSRestController
      */
     public function renderExcel($arr, $cab = null, $cols = null, $ignoreCols = null, $logo = null)
     {
-        $this->exportArrayToExcel($arr, $cab, $cols, $ignoreCols = null, $logo = null);
+        $this->exportArrayToExcel($arr, $cab, $cols, $ignoreCols, $logo);
+    }
+
+    public function filterIgnoredCols($ignoreCols, &$cab, &$arr)
+    {
+        foreach ($ignoreCols as $col) {
+            foreach ($cab as $c => $ca) {
+                if ($c == $col) {
+                    unset($cab[$c]);
+                }
+            }
+            foreach ($arr as $r => $row) {
+                foreach ($row as $c => $v) {
+                    if ($c == $col) {
+                        unset($arr[$r][$c]);
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -379,16 +397,7 @@ abstract class ControllerAbstract extends FOSRestController
             $arr = $this->filterCols($arr, $cols);
         }
         if (!empty($ignoreCols)) {
-            foreach($ignoreCols as $col) {
-                foreach($arr as $r => $row) {
-                    foreach($row as $c => $v) {
-                        if ($c == $col) {
-                            unset($arr[$r][$c]);
-                        }
-                    }
-                }
-            }
-            $arr = $this->filterCols($arr, $cols);
+            $this->filterIgnoredCols($ignoreCols, $cab, $arr);
         }
 
         //Cria o excel e adiciona o conteúdo a ele
@@ -417,18 +426,18 @@ abstract class ControllerAbstract extends FOSRestController
             $rowBegin += 1;
         }
 
-        if($this->institutionalSubscription) {
-            $excel->getActiveSheet()->getStyle('A' . $rowBegin . ':I' . $rowBegin )->getAlignment()->setHorizontal(\PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
-            $excel->getActiveSheet()->getStyle('A' . $rowBegin . ':I' . $rowBegin )->getFont()->setBold(true);
-            $excel->setActiveSheetIndex(0)->mergeCells('A' . $rowBegin . ':I' . $rowBegin );
-            $excel->setActiveSheetIndex(0)->setCellValue('A' . $rowBegin , $this->institutionalSubscription);
+        if ($this->institutionalSubscription) {
+            $excel->getActiveSheet()->getStyle('A' . $rowBegin . ':I' . $rowBegin)->getAlignment()->setHorizontal(\PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+            $excel->getActiveSheet()->getStyle('A' . $rowBegin . ':I' . $rowBegin)->getFont()->setBold(true);
+            $excel->setActiveSheetIndex(0)->mergeCells('A' . $rowBegin . ':I' . $rowBegin);
+            $excel->setActiveSheetIndex(0)->setCellValue('A' . $rowBegin, $this->institutionalSubscription);
             $rowBegin += 1;
         }
 
         // //cabeçalho
-        $sheet->fromArray($cab, null, 'A'.++$rowBegin);
+        $sheet->fromArray($cab, null, 'A' . ++$rowBegin);
         // //corpo
-        $sheet->fromArray($arr, null, 'A'.++$rowBegin);
+        $sheet->fromArray($arr, null, 'A' . ++$rowBegin);
 
         // Redirect output to a client’s web browser (Excel5)
         header('Content-Type: application/vnd.ms-excel');
@@ -507,6 +516,34 @@ abstract class ControllerAbstract extends FOSRestController
         return $cab;
     }
 
+    public function renderCsv($arr, $cab = null, $cols = null, $ignoreCols = null)
+    {
+        if (!$cab) {
+            $cab = $this->setExportHeader($arr);
+        }
+        if (!empty($cols)) {
+            $arr = $this->filterCols($arr, $cols);
+        }
+        if (!empty($ignoreCols)) {
+            $this->filterIgnoredCols($ignoreCols, $cab, $arr);
+        }
+
+        $csv = array();
+        foreach ($arr as $k => $row) {
+            // var_dump(implode('","', $row));die;
+            $csv[] = '"' . implode('","', $row) . '"';
+            unset($arr[$k]); //economizar memória é importante, garotada.
+        }
+        $csv = implode("\n", $csv);
+
+        header('Content-Type: application/csv');
+        header('Content-Disposition: attachment;filename="export.csv"');
+        header('Cache-Control: max-age=0');
+
+        echo $csv;
+        exit;
+    }
+
     /**
      * Renderiza um array em formato PDF.
      * @param  [type] $arr [description]
@@ -515,11 +552,13 @@ abstract class ControllerAbstract extends FOSRestController
     public function renderPdf($data, $cab = null, $cols = null, $ignoreCols = null, $template = 'BizlayBundle::exportpdf.html.twig')
     {
         if (!$cab) {
-            $cab = $this->setExportHeader($data);
+            $cab = $this->setExportHeader($arr);
         }
-
-        if (!$cols) {
-            $cols = $this->setExportColumns($data);
+        if (!empty($cols)) {
+            $arr = $this->filterCols($arr, $cols);
+        }
+        if (!empty($ignoreCols)) {
+            $this->filterIgnoredCols($ignoreCols, $cab, $arr);
         }
 
         $html = $this->container->get('templating')->render($template, array(
@@ -536,7 +575,7 @@ abstract class ControllerAbstract extends FOSRestController
             200,
             array(
                 'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'attachment; filename="file.pdf"',
+                'Content-Disposition' => 'attachment; filename="export.pdf"',
             )
         );
     }
