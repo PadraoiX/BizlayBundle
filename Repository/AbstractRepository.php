@@ -85,7 +85,7 @@ abstract class AbstractRepository extends EntityRepository
          *          regexp_replace(name, '^.*?([[:digit:]]*)$', '\1')::bigint;
          */
         $sortOrder = (isset($searchData['sortOrder']) && $searchData['sortOrder']) ? $searchData['sortOrder'] : 'desc';
-        $orderBy = (isset($searchData['orderBy']) && $searchData['orderBy']) ? $searchData['orderBy'] : 'g.'.$identifier;
+        $orderBy = (isset($searchData['orderBy']) && $searchData['orderBy']) ? $searchData['orderBy'] : 'g.' . $identifier;
 
         $this->searchQueryFilterOrderBy($orderBy);
     }
@@ -155,12 +155,12 @@ abstract class AbstractRepository extends EntityRepository
 //            if ($this->checkPgSql()) {
 
 //            } else {
-                $finalDql = str_replace(
-                    $origDQL,
-                    $query->getDQL(),
-                    $qb->orderBy($orderBy, $sortOrder)->getQuery()->getDQL()
-                );
-                $query->setDQL($finalDql);
+            $finalDql = str_replace(
+                $origDQL,
+                $query->getDQL(),
+                $qb->orderBy($orderBy, $sortOrder)->getQuery()->getDQL()
+            );
+            $query->setDQL($finalDql);
 //            }
         }
 
@@ -188,7 +188,7 @@ abstract class AbstractRepository extends EntityRepository
                 if (isset($annons['Doctrine\ORM\Mapping\Column'])) {
                     $pt = $annons['Doctrine\ORM\Mapping\Column']->type;
                     if ($pt == 'string' || $pt == 'text') {
-                        $query->setDQL($query->getDQL() . $and . $this->ci('g.' . $attr) . ' like '.$this->ci(':' . $attr));
+                        $query->setDQL($query->getDQL() . $and . $this->ci('g.' . $attr) . ' like ' . $this->ci(':' . $attr));
                         $query->setParameter($attr, '%' . str_replace(' ', '%', trim($searchData['searchAll'])) . '%');
                         $and = ' or ';
                     }
@@ -218,7 +218,7 @@ abstract class AbstractRepository extends EntityRepository
         $count = false;
         $dql = ' where ( ';
         $arrNum = array('integer', 'int', 'smallint', 'bigint', 'float', 'decimal');
-        $arrDtTm = array('date','datetime','time');
+        $arrDtTm = array('date', 'datetime', 'time');
         foreach ($searchData as $field => $criteria) {
             if (trim($searchData[$field]) != "" && method_exists($this->getEntityName(), 'set' . ucfirst($field))) {
                 $prop = $reflx->getProperty($field);
@@ -227,7 +227,7 @@ abstract class AbstractRepository extends EntityRepository
                     $pt = $annons['Doctrine\ORM\Mapping\Column']->type;
 
                     if ($pt == 'string' || $pt == 'text') {
-                        $dql .= $and . $this->ci('g.' . $field) . ' like '.$this->ci(':' . $field);
+                        $dql .= $and . $this->ci('g.' . $field) . ' like ' . $this->ci(':' . $field);
                         $query->setParameter($field, '%' . str_replace(' ', '%', trim($criteria)) . '%');
                         $and = ' and ';
                     }
@@ -245,8 +245,7 @@ abstract class AbstractRepository extends EntityRepository
                         $query->setParameter($field, $criteria);
                         $and = ' and ';
                     }
-                    if (in_array($pt, $arrNum))
-                    {
+                    if (in_array($pt, $arrNum)) {
                         $dql .= $and . 'g.' . $field . ' = :' . $field . ' ';
                         $query->setParameter($field, $criteria);
                         $and = ' and ';
@@ -348,11 +347,10 @@ abstract class AbstractRepository extends EntityRepository
     {
         if ($pt == 'text' || $pt == 'string') {
             //        if ($this->checkPgSql()) {
-//            return 'lower(to_ascii('.$prepareString.'))';
-//        }
+            //            return 'lower(to_ascii('.$prepareString.'))';
+            //        }
             return 'lower(' . $prepareString . ')';
-        }
-        else {
+        } else {
             return $prepareString;
         }
     }
@@ -379,9 +377,9 @@ abstract class AbstractRepository extends EntityRepository
                 $qb = $this->createQueryBuilder('u');
                 $qb->select('u.id')
                     ->andWhere(
-                           $qb->expr()->eq($this->ci('u.' . $prop->getName(), $pt), $this->ci(':param', $pt))
-                       )
-                   ->setParameter('param', $uniqueParam);
+                        $qb->expr()->eq($this->ci('u.' . $prop->getName(), $pt), $this->ci(':param', $pt))
+                    )
+                    ->setParameter('param', $uniqueParam);
 
                 $id = $entity->getId();
                 if (is_null($id)) {
@@ -390,9 +388,9 @@ abstract class AbstractRepository extends EntityRepository
                     );
                 } else {
                     $qb->andWhere(
-                           $qb->expr()->neq('u.id', ':id')
-                       )
-                       ->setParameter('id', $id);
+                        $qb->expr()->neq('u.id', ':id')
+                    )
+                        ->setParameter('id', $id);
                 }
 
                 $query = $qb->getQuery();
