@@ -531,7 +531,7 @@ abstract class ControllerAbstract extends FOSRestController
         $csv = array();
         foreach ($arr as $k => $row) {
             // var_dump(implode('","', $row));die;
-            $csv[] = '"' . implode('","', $row) . '"';
+            $csv[] = str_replace("\n", "", '"' . implode('","', $row) . '"');
             unset($arr[$k]); //economizar memória é importante, garotada.
         }
         $csv = implode("\n", $csv);
