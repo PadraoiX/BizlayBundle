@@ -258,8 +258,6 @@ abstract class ControllerAbstract extends FOSRestController
         // $lastPath = explode('?', $lastPath);
         // $routePath = $lastPath[0];
 
-        // die($routePath);
-
         $matcher = $this->get('router')->getMatcher();
         $parameters = $matcher->match($routePath);
 
@@ -549,7 +547,7 @@ abstract class ControllerAbstract extends FOSRestController
      * @param  [type] $arr [description]
      * @return [type]      [description]
      */
-    public function renderPdf($data, $cab = null, $cols = null, $ignoreCols = null, $template = 'BizlayBundle::exportpdf.html.twig')
+    public function renderPdf($arr, $cab = null, $cols = null, $ignoreCols = null, $template = 'BizlayBundle::exportpdf.html.twig')
     {
         if (!$cab) {
             $cab = $this->setExportHeader($arr);
@@ -564,7 +562,7 @@ abstract class ControllerAbstract extends FOSRestController
         $html = $this->container->get('templating')->render($template, array(
             'colNames' => $cab,
             'colValues' => $cols,
-            'result' => $data,
+            'result' => $arr,
             'institutionalTitle' => $this->institutionalTitle,
             'institutionalSubscription' => $this->institutionalSubscription,
             //'logo' => $this->getLogo()
