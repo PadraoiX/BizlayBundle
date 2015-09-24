@@ -369,6 +369,8 @@ abstract class AbstractEntity
                 $attr != 'lazyPropertiesDefaults' &&
                 $attr != 'id' &&
                 (
+                    is_object($this->$method()) &&
+                    $this->$method() instanceof \SanSIS\BizlayBundle\Entity\AbstractEntity &&
                     is_object($this->__parent) &&
                     $this->$method() !== $this->__parent
                 )
