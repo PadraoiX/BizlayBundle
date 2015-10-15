@@ -10,6 +10,7 @@ use SanSIS\BizlayBundle\Service\ServiceData;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use \Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 
 abstract class ControllerAbstract extends FOSRestController
 {
@@ -591,6 +592,43 @@ abstract class ControllerAbstract extends FOSRestController
     public function renderPdf($arr, $cab = null, $cols = null, $ignoreCols = null, $template = 'BizlayBundle::exportpdf.html.twig', $logo = false)
     {
         $html = $this->generateHtml4Pdf($arr, $cab, $cols, $ignoreCols, $template);
+
+        return new Response(
+            $this->get('knp_snappy.pdf')->getOutputFromHtml($html),
+            200,
+            array(
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="export.pdf"',
+            )
+        );
+    }
+
+    /**
+     * Renderiza um array em formato HTML.
+     * @param  [type] $arr [description]
+     * @return [type]      [description]
+     * @Template
+     */
+    public function renderHtml($arr, $cab = null, $cols = null, $ignoreCols = null, $template = 'BizlayBundle::exportpdf.html.twig')
+    {
+        if (!$cab) {
+            $cab = $this->setExportHeader($arr);
+        }
+        if (!empty($cols)) {
+            $arr = $this->filterCols($arr, $cols);
+        }
+        if (!empty($ignoreCols)) {
+            $this->filterIgnoredCols($ignoreCols, $cab, $arr);
+        }
+
+        $html = $this->container->get('templating')->render($template, array(
+            'colNames' => $cab,
+            'colValues' => $cols,
+            'result' => $arr,
+            'institutionalTitle' => $this->institutionalTitle,
+            'institutionalSubscription' => $this->institutionalSubscription,
+            //'logo' => $this->getLogo()
+        ));
 
         return new Response(
             $this->get('knp_snappy.pdf')->getOutputFromHtml($html),
