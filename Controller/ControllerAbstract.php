@@ -542,18 +542,30 @@ abstract class ControllerAbstract extends FOSRestController
         exit;
     }
 
-    /**
-     * Renderiza um array em formato PDF.
-     * @param  [type] $arr [description]
-     * @return [type]      [description]
-     */
-    public function renderPdf($arr, $cab = null, $cols = null, $ignoreCols = null, $template = 'BizlayBundle::exportpdf.html.twig')
+    public function generateHtml4Pdf($arr, $cab = null, $cols = null, $ignoreCols = null, $template = 'BizlayBundle::exportpdf.html.twig', $logo = false)
     {
         if (!$cab) {
             $cab = $this->setExportHeader($arr);
         }
         if (!empty($cols)) {
             $arr = $this->filterCols($arr, $cols);
+        } else {
+            $cols = array();
+            foreach ($arr[0] as $col => $val) {
+                if (count($ignoreCols)) {
+                    $ig = true;
+                    foreach ($ignoreCols as $iCol) {
+                        if ($col == $iCol) {
+                            $ig = false;
+                        }
+                    }
+                    if ($ig) {
+                        $cols[$col] = $col;
+                    }
+                } else {
+                    $cols[$col] = $col;
+                }
+            }
         }
         if (!empty($ignoreCols)) {
             $this->filterIgnoredCols($ignoreCols, $cab, $arr);
@@ -565,8 +577,20 @@ abstract class ControllerAbstract extends FOSRestController
             'result' => $arr,
             'institutionalTitle' => $this->institutionalTitle,
             'institutionalSubscription' => $this->institutionalSubscription,
-            //'logo' => $this->getLogo()
+            'logo' => $logo,
         ));
+
+        return $html;
+    }
+
+    /**
+     * Renderiza um array em formato PDF.
+     * @param  [type] $arr [description]
+     * @return [type]      [description]
+     */
+    public function renderPdf($arr, $cab = null, $cols = null, $ignoreCols = null, $template = 'BizlayBundle::exportpdf.html.twig', $logo = false)
+    {
+        $html = $this->generateHtml4Pdf($arr, $cab, $cols, $ignoreCols, $template);
 
         return new Response(
             $this->get('knp_snappy.pdf')->getOutputFromHtml($html),
