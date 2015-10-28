@@ -2,15 +2,16 @@
 
 namespace SanSIS\BizlayBundle\Entity;
 
+use Doctrine\Common\Util\Inflector;
 use \Doctrine\Common\Annotations\AnnotationReader;
 use \Doctrine\Common\Annotations\IndexedReader;
 use \Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Util\Inflector;
 use \Doctrine\ORM\Mapping as ORM;
 use \Doctrine\ORM\PersistentCollection;
 use \JMS\Serializer\Annotation as Serializer;
 use \JMS\Serializer\SerializerBuilder;
 use \SanSIS\BizlayBundle\Entity\Exception\ValidationException;
+
 //use Knp\JsonSchemaBundle\Annotations as JSON;
 
 /**
@@ -76,7 +77,7 @@ abstract class AbstractEntity
     protected static $__inactiveMethods = array(
         "getIsActive",
         "getFlActive",
-        "getStatusTuple"
+        "getStatusTuple",
     );
 
     /**
@@ -165,9 +166,9 @@ abstract class AbstractEntity
     private function __getEntityAsArray($entity)
     {
         return
-            json_decode(
-                $this->__getSerializer()->serialize($entity, 'json')
-            );
+        json_decode(
+            $this->__getSerializer()->serialize($entity, 'json')
+        );
     }
 
     private function correctReflectionClass($class)
@@ -184,7 +185,6 @@ abstract class AbstractEntity
         return $ref;
     }
 
-
     /**
      * @param bool|false $inactives - processa ou não registros marcados como excluídos logicamente
      * @param null $innerClass - nome da classe interna para evitar retornos de referência circular
@@ -193,7 +193,7 @@ abstract class AbstractEntity
     public function toArray($inactives = false, $innerClass = null)
     {
         if (!$inactives) {
-            foreach(self::$__inactiveMethods as $method) {
+            foreach (self::$__inactiveMethods as $method) {
                 if (method_exists($this, $method)) {
                     if (!$this->$method()) {
                         return null;
@@ -237,8 +237,8 @@ abstract class AbstractEntity
                                     }
                                 }
 //                                else if ($value instanceof \DateTime) {
-//                                    $subvalues = $subvalue;
-//                                }
+                                //                                    $subvalues = $subvalue;
+                                //                                }
                                 else if (is_object($subvalue) && $this->__parent !== $subvalue) {
                                     /*@TODO - verificar tipo de objeto*/
                                     if (method_exists($subvalue, 'toString')) {
@@ -257,7 +257,7 @@ abstract class AbstractEntity
                     }
                     if ($value instanceof AbstractEntity && $this->__parent !== $value) {
                         //Evita o retorno para sets
-                        $setmethod = 'set'.substr($method, 3);
+                        $setmethod = 'set' . substr($method, 3);
                         $params = $ref->getMethod($setmethod)->getParameters();
                         if (isset($params[0]) && $params[0]->getClass() && $params[0]->getClass()->getName() == $innerClass) {
                             continue;
@@ -315,7 +315,7 @@ abstract class AbstractEntity
      */
     public function hasErrors()
     {
-        return (bool)count(self::$__errors);
+        return (bool) count(self::$__errors);
     }
 
     /**
@@ -369,6 +369,7 @@ abstract class AbstractEntity
                 $attr != 'lazyPropertiesDefaults' &&
                 $attr != 'id' &&
                 (
+                    method_exists($this, $method) &&
                     is_object($this->$method()) &&
                     $this->$method() instanceof \SanSIS\BizlayBundle\Entity\AbstractEntity &&
                     is_object($this->__parent) &&
@@ -412,16 +413,16 @@ abstract class AbstractEntity
             $val = $this->$method();
             switch ($type) {
                 case in_array($type, array('smallint', 'integer', 'bigint')):
-                    is_int($val) ? true : $this->addError('Tipo', 'O atributo não é um inteiro: ' . get_class($this) . '::' . $prop . ' => ' . $val . ' ( nullable : ' . (int)$nullable . ')');
+                    is_int($val) ? true : $this->addError('Tipo', 'O atributo não é um inteiro: ' . get_class($this) . '::' . $prop . ' => ' . $val . ' ( nullable : ' . (int) $nullable . ')');
                     break;
                 case in_array($type, array('decimal', 'float')):
-                    is_float($val) ? true : $this->addError('Tipo', 'O atributo não é um float: ' . get_class($this) . '::' . $prop . ' => ' . $val . ' ( nullable : ' . (int)$nullable . ')');
+                    is_float($val) ? true : $this->addError('Tipo', 'O atributo não é um float: ' . get_class($this) . '::' . $prop . ' => ' . $val . ' ( nullable : ' . (int) $nullable . ')');
                     break;
                 case in_array($type, array('boolean')):
-                    (is_bool($val) || $val == '1' || $val == '0') ? true : $this->addError('Tipo', 'O atributo não é um boolean: ' . get_class($this) . '::' . $prop . ' => ' . $val . ' ( nullable : ' . (int)$nullable . ')');
+                    (is_bool($val) || $val == '1' || $val == '0') ? true : $this->addError('Tipo', 'O atributo não é um boolean: ' . get_class($this) . '::' . $prop . ' => ' . $val . ' ( nullable : ' . (int) $nullable . ')');
                     break;
                 case in_array($type, array('date', 'datetime', 'datetimetx', 'time')):
-                    ($val instanceof \DateTime) ? true : $this->addError('Tipo', 'O atributo não é um date/datetime/time: ' . get_class($this) . '::' . $prop . ' => ' . $val->format('Y-m-d H:i:s') . ' ( nullable : ' . (int)$nullable . ')');
+                    ($val instanceof \DateTime) ? true : $this->addError('Tipo', 'O atributo não é um date/datetime/time: ' . get_class($this) . '::' . $prop . ' => ' . $val->format('Y-m-d H:i:s') . ' ( nullable : ' . (int) $nullable . ')');
                     break;
             }
         }
@@ -436,16 +437,16 @@ abstract class AbstractEntity
         if ($length) {
             $val = $this->$method();
             (strlen($val) > $length) ?
-                $this->addError(
-                    'Nulo',
-                    'Atributo com comprimento superior ao permitido: ' . $prop .
-                    ', comprimento: ' . strlen($val) .
-                    ', máximo: ' . $length,
-                    'Doctrine',
-                    get_class($this),
-                    $prop
-                )
-                : true;
+            $this->addError(
+                'Nulo',
+                'Atributo com comprimento superior ao permitido: ' . $prop .
+                ', comprimento: ' . strlen($val) .
+                ', máximo: ' . $length,
+                'Doctrine',
+                get_class($this),
+                $prop
+            )
+            : true;
         }
     }
 
@@ -458,15 +459,15 @@ abstract class AbstractEntity
         if (!$nullable) {
             $val = $this->$method();
             ($val === null) ?
-                $this->addError(
-                    'Nulo ou Vazio',
-                    'O atributo na entidade ' . get_class($this) .
-                    ' não pode ser nulo ou vazio: ' . $prop.'=>'.var_export($val, true),
-                    'Doctrine',
-                    get_class($this),
-                    $prop
-                )
-                : true;
+            $this->addError(
+                'Nulo ou Vazio',
+                'O atributo na entidade ' . get_class($this) .
+                ' não pode ser nulo ou vazio: ' . $prop . '=>' . var_export($val, true),
+                'Doctrine',
+                get_class($this),
+                $prop
+            )
+            : true;
         }
     }
 }
