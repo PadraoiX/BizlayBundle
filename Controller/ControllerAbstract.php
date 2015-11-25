@@ -527,7 +527,13 @@ abstract class ControllerAbstract extends FOSRestController
             $this->filterIgnoredCols($ignoreCols, $cab, $arr);
         }
 
-        $csv = array();
+        /**
+         * Cabeçalho dos dados
+         */
+        $csv = array(
+            str_replace("\n", "", '"' . implode('","', $cab) . '"')
+        );
+
         foreach ($arr as $k => $row) {
             // var_dump(implode('","', $row));die;
             $csv[] = str_replace("\n", "", '"' . implode('","', $row) . '"');
