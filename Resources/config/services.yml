@@ -1,0 +1,5 @@
+services:
+  bizlay_serialize_exclusion:
+    class: SanSIS\BizlayBundle\EventListener\PreSerializeIgnoreExcluded
+    tags:
+      - { name: kernel.event_listener, event: serializer.pre_serialize }
