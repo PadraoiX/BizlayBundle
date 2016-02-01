@@ -3,6 +3,9 @@ namespace SanSIS\BizlayBundle\Service;
 
 use \Doctrine\ORM\EntityManager;
 use \JMS\DiExtraBundle\Annotation as DI;
+use \JMS\Serializer\SerializerBuilder;
+use \JMS\Serializer\Naming\SerializedNameAnnotationStrategy;
+use \JMS\Serializer\Naming\IdenticalPropertyNamingStrategy;
 
 /**
  * Class AbstractService
@@ -56,6 +59,20 @@ abstract class AbstractService
         $this->setEntityManager($entityManager);
         $this->container = $container;
         $this->logger = $logger;
+    }
+
+    /**
+     * Serializador -substitui a idéia do toArray embutido nas entidades
+     *
+     * @param $entity
+     * @return mixed
+     */
+    public static function serializeEntity($entity)
+    {
+        $serializer = SerializerBuilder::create()
+            ->setPropertyNamingStrategy(new SerializedNameAnnotationStrategy(new IdenticalPropertyNamingStrategy()))
+            ->build();
+        return json_decode($serializer->serialize($entity, 'json'), true);
     }
 
     /**
