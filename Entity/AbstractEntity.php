@@ -166,9 +166,9 @@ abstract class AbstractEntity
     private function __getEntityAsArray($entity)
     {
         return
-        json_decode(
-            $this->__getSerializer()->serialize($entity, 'json')
-        );
+            json_decode(
+                $this->__getSerializer()->serialize($entity, 'json')
+            );
     }
 
     private function correctReflectionClass($class)
@@ -216,13 +216,20 @@ abstract class AbstractEntity
             $methods = get_class_methods($this);
 
             foreach ($methods as $method) {
+
+                $attr = lcfirst(substr($method, 3));
+
                 if ('get' === substr($method, 0, 3) && $method != "getErrors") {
 
                     $value = $this->$method();
 
                     //Arrays e Collections
                     if (\is_array($value) || $value instanceof ArrayCollection || $value instanceof PersistentCollection) {
-
+                        $prop = $ref->getProperty($attr);
+                        if (strstr($prop->getDocComment(), 'EXTRA_LAZY')) {
+                            $data[$attr] = array();
+                            continue;
+                        }
                         /**
                          * @TODO - Filtrar innerEntity para não ter referência circular
                          */
@@ -279,7 +286,7 @@ abstract class AbstractEntity
 
                     }
                     if (!$this->__parent || ($this->__parent && (($value instanceof AbstractEntity && $this->__parent != $value) || !($value instanceof AbstractEntity)))) {
-                        $data[lcfirst(substr($method, 3))] = $value;
+                        $data[$attr] = $value;
                     }
                 }
             }
@@ -437,16 +444,16 @@ abstract class AbstractEntity
         if ($length) {
             $val = $this->$method();
             (strlen($val) > $length) ?
-            $this->addError(
-                'Nulo',
-                'Atributo com comprimento superior ao permitido: ' . $prop .
-                ', comprimento: ' . strlen($val) .
-                ', máximo: ' . $length,
-                'Doctrine',
-                get_class($this),
-                $prop
-            )
-            : true;
+                $this->addError(
+                    'Nulo',
+                    'Atributo com comprimento superior ao permitido: ' . $prop .
+                    ', comprimento: ' . strlen($val) .
+                    ', máximo: ' . $length,
+                    'Doctrine',
+                    get_class($this),
+                    $prop
+                )
+                : true;
         }
     }
 
@@ -459,15 +466,15 @@ abstract class AbstractEntity
         if (!$nullable) {
             $val = $this->$method();
             ($val === null) ?
-            $this->addError(
-                'Nulo ou Vazio',
-                'O atributo na entidade ' . get_class($this) .
-                ' não pode ser nulo ou vazio: ' . $prop . '=>' . var_export($val, true),
-                'Doctrine',
-                get_class($this),
-                $prop
-            )
-            : true;
+                $this->addError(
+                    'Nulo ou Vazio',
+                    'O atributo na entidade ' . get_class($this) .
+                    ' não pode ser nulo ou vazio: ' . $prop . '=>' . var_export($val, true),
+                    'Doctrine',
+                    get_class($this),
+                    $prop
+                )
+                : true;
         }
     }
 }
