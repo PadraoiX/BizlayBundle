@@ -1,7 +1,7 @@
 <?php
 namespace SanSIS\BizlayBundle\Service;
 
-use \JMS\DiExtraBundle\Annotation as DI;
+use JMS\DiExtraBundle\Annotation as DI;
 
 /**
  * Class ServiceDto

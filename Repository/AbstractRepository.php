@@ -6,7 +6,7 @@ use Doctrine\Common\Annotations\IndexedReader;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Query;
 use SanSIS\BizlayBundle\Entity\AbstractEntity;
-use \SanSIS\BizlayBundle\Service\ServiceDto;
+use SanSIS\BizlayBundle\Service\ServiceDto;
 
 /**
  * Class AbstractEntityRepository

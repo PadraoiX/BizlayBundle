@@ -3,14 +3,14 @@
 namespace SanSIS\BizlayBundle\Entity;
 
 use Doctrine\Common\Util\Inflector;
-use \Doctrine\Common\Annotations\AnnotationReader;
-use \Doctrine\Common\Annotations\IndexedReader;
-use \Doctrine\Common\Collections\ArrayCollection;
-use \Doctrine\ORM\Mapping as ORM;
-use \Doctrine\ORM\PersistentCollection;
-use \JMS\Serializer\Annotation as Serializer;
-use \JMS\Serializer\SerializerBuilder;
-use \SanSIS\BizlayBundle\Entity\Exception\ValidationException;
+use Doctrine\Common\Annotations\AnnotationReader;
+use Doctrine\Common\Annotations\IndexedReader;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\PersistentCollection;
+use JMS\Serializer\Annotation as Serializer;
+use JMS\Serializer\SerializerBuilder;
+use SanSIS\BizlayBundle\Entity\Exception\ValidationException;
 
 //use Knp\JsonSchemaBundle\Annotations as JSON;
 

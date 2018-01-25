@@ -10,7 +10,7 @@ use SanSIS\BizlayBundle\Service\ServiceData;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use \Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 
 abstract class ControllerAbstract extends FOSRestController
 {

@@ -1,8 +1,8 @@
 <?php
 namespace SanSIS\BizlayBundle\Service;
 
-use \Doctrine\ORM\EntityManager;
-use \JMS\DiExtraBundle\Annotation as DI;
+use Doctrine\ORM\EntityManager;
+use JMS\DiExtraBundle\Annotation as DI;
 
 /**
  * Class AbstractService

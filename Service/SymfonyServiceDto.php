@@ -1,8 +1,8 @@
 <?php
 namespace SanSIS\BizlayBundle\Service;
 
-use \JMS\DiExtraBundle\Annotation as DI;
-use \Symfony\Component\HttpFoundation\RequestStack;
+use JMS\DiExtraBundle\Annotation as DI;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Class SymfonyServiceDto
