@@ -8,9 +8,9 @@
     "email": "phackwer@gmail.com"
   }],
   "require": {
-    "jms/di-extra-bundle": "1.5.0",
-    "jms/serializer-bundle": "~0.16.0",
-    "friendsofsymfony/rest-bundle": "~0.12.0"
+    "jms/di-extra-bundle": "~1.9.2",
+    "jms/serializer-bundle": "~2.4",
+    "friendsofsymfony/rest-bundle": "~1.5"
   },
   "autoload": {
     "psr-0": {
